@@ -2,10 +2,11 @@ import React from "react";
 import "./App.css";
 import { Button } from "@/components/ui/button";
 import Login from "./pages/authPages/Login";
+import AppRoutes from "./AppRoutes";
 const App = () => {
   return (
-    <div className="bg-red-600 ">
-      <Login></Login>
+    <div className="w-screen h-screen ">
+      <AppRoutes></AppRoutes>
     </div>
   );
 };
