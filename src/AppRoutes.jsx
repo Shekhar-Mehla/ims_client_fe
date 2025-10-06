@@ -1,4 +1,4 @@
-import React from "react";
+
 import { Routes, Route } from "react-router";
 import Login from "./pages/authPages/Login";
 import DefaultLayout from "./components/CustomComponents/DefaultLayout";

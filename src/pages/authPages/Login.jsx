@@ -10,8 +10,18 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import UseForm from "../../hooks/UseForm";
 
 const Login = () => {
+  const initialState = {};
+  const { form, setForm, handleOnChange } = UseForm();
+
+  const handleOnSubmit = (e) => {
+    e.preventDefault();
+    console.log(e);
+    console.log(form);
+  };
+
   return (
     <Card className="w-full max-w-sm">
       <CardHeader>
@@ -24,7 +34,7 @@ const Login = () => {
         </CardAction>
       </CardHeader>
       <CardContent>
-        <form>
+        <form onSubmit={handleOnSubmit}>
           <div className="flex flex-col gap-6">
             <div className="grid gap-2">
               <Label htmlFor="email">Email</Label>
@@ -33,6 +43,8 @@ const Login = () => {
                 type="email"
                 placeholder="m@example.com"
                 required
+                onChange={handleOnChange}
+                name="email"
               />
             </div>
             <div className="grid gap-2">
@@ -45,19 +57,19 @@ const Login = () => {
                   Forgot your password?
                 </a>
               </div>
-              <Input id="password" type="password" required />
+              <Input
+                id="password"
+                type="password"
+                name="password"
+                onChange={handleOnChange}
+                required
+              />
             </div>
+            <Button type="submit">Login</Button>
           </div>
         </form>
       </CardContent>
-      <CardFooter className="flex-col gap-2">
-        <Button type="submit" className="w-full">
-          Login
-        </Button>
-        <Button variant="outline" className="w-full">
-          Login with Google
-        </Button>
-      </CardFooter>
+      <CardFooter className="flex-col gap-2"></CardFooter>
     </Card>
   );
 };
