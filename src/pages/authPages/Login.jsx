@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 
 import Submit from "../../components/CustomComponents/Submit";
 import { useActionState } from "react";
+import loginImage from "../../assets/Student-Internship.jpg";
 
 const Login = () => {
   const handleOnSubmit = async (prevState, formData) => {
@@ -34,22 +35,36 @@ const Login = () => {
   const [state, formAction] = useActionState(handleOnSubmit, {});
 
   return (
-    <div className="flex justify-center  h-screen items-center ">
-      {/* left  */}
-      <div className="border h-100 p-20">
-        <h2>IMS</h2>
-      </div>
-      <div>
-        <Card className="p-20">
+    <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 p-6">
+      <Card className="flex flex-row overflow-hidden rounded-xl shadow-lg">
+        {/* Left - Image Section */}
+        <div className="w-1/2 bg-slate-800">
+          <img
+            src={loginImage}
+            alt="Login Illustration"
+            className="object-cover h-full w-full"
+          />
+        </div>
+
+        {/* Right - Form Section */}
+        <div className="w-1/2 bg-white text-gray-800 p-10">
           <CardHeader>
-            <CardTitle>Login to your account</CardTitle>
-            <CardDescription>
-              Enter your email below to login to your account
+            <CardTitle className="text-2xl font-bold">
+              Login to your account
+            </CardTitle>
+            <CardDescription className="text-gray-600">
+              Enter your email and password below
             </CardDescription>
             <CardAction>
-              <Button variant="link">Sign Up</Button>
+              <Button
+                variant="link"
+                className="p-0 text-blue-600 hover:underline"
+              >
+                Sign Up
+              </Button>
             </CardAction>
           </CardHeader>
+
           <CardContent>
             <form action={formAction}>
               <div className="flex flex-col gap-6">
@@ -63,11 +78,11 @@ const Login = () => {
                   />
                 </div>
                 <div className="grid gap-2">
-                  <div className="flex items-center gap-20">
+                  <div className="flex justify-between items-center">
                     <Label htmlFor="password">Password</Label>
                     <a
                       href="#"
-                      className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
+                      className="text-sm text-blue-600 hover:underline"
                     >
                       Forgot your password?
                     </a>
@@ -75,15 +90,16 @@ const Login = () => {
                   <Input id="password" type="password" name="password" />
                 </div>
                 {state?.error && (
-                  <div className="text-red-700">{state.error}</div>
+                  <div className="text-sm text-red-600">{state.error}</div>
                 )}
-                <Submit></Submit>
+                <Submit className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-md">
+                  Login
+                </Submit>
               </div>
             </form>
           </CardContent>
-          <CardFooter className="flex-col gap-2"></CardFooter>
-        </Card>
-      </div>
+        </div>
+      </Card>
     </div>
   );
 };
