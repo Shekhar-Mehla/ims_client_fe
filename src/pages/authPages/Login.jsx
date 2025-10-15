@@ -24,7 +24,7 @@ const Login = () => {
       return { error: "email is not valid" };
     }
     // make api call
-    await new Promise((resolve) => setTimeout(resolve, 3000));
+    await new Promise((resolve) => setTimeout(resolve, 3002));
     if (email === "smehla147@gmail.com" && password === "123") {
       return "success";
     } else {
