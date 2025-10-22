@@ -17,6 +17,16 @@ import { useActionState } from "react";
 import { Mail, Lock } from "lucide-react";
 import { Link } from "react-router";
 
+import { signInWithPopup } from "firebase/auth";
+import {
+  auth,
+  googleProvider,
+  facebookProvider,
+  githubProvider,
+} from "../../firebase/firebase-config.js";
+import { FcGoogle } from "react-icons/fc";
+import { FaFacebook, FaGithub } from "react-icons/fa";
+
 const Login = () => {
   const handleOnSubmit = async (prevState, formData) => {
     const email = formData.get("email");
@@ -33,8 +43,37 @@ const Login = () => {
       return { error: "invalid credentials" };
     }
   };
+ 
 
   const [state, formAction] = useActionState(handleOnSubmit, {});
+
+  // ----------------- OAuth Handlers -----------------
+  const handleGoogleLogin = async () => {
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      console.log("✅ Google Login Success:", result.user);
+    } catch (error) {
+      console.error("❌ Google Login Error:", error.message);
+    }
+  };
+
+  const handleFacebookLogin = async () => {
+    try {
+      const result = await signInWithPopup(auth, facebookProvider);
+      console.log("✅ Facebook Login Success:", result.user);
+    } catch (error) {
+      console.error("❌ Facebook Login Error:", error.message);
+    }
+  };
+
+  const handleGithubLogin = async () => {
+    try {
+      const result = await signInWithPopup(auth, githubProvider);
+      console.log("✅ GitHub Login Success:", result.user);
+    } catch (error) {
+      console.error("❌ GitHub Login Error:", error.message);
+    }
+  };
 
   return (
     <div
@@ -55,7 +94,6 @@ const Login = () => {
             Manage your internship journey with ease. Apply, track, and get
             updates on IT opportunities.
           </p>
-          {/* Optional subtle tech SVG */}
           <svg
             className="absolute bottom-8 right-8 w-32 h-32 opacity-20"
             fill="none"
@@ -90,6 +128,7 @@ const Login = () => {
             <CardContent>
               <form action={formAction}>
                 <div className="flex flex-col gap-6">
+                  {/* Email */}
                   <div className="grid gap-2">
                     <Label htmlFor="email">Email</Label>
                     <div className="relative">
@@ -104,6 +143,7 @@ const Login = () => {
                     </div>
                   </div>
 
+                  {/* Password */}
                   <div className="grid gap-2">
                     <div className="flex justify-between items-center">
                       <Label htmlFor="password">Password</Label>
@@ -125,15 +165,55 @@ const Login = () => {
                     </div>
                   </div>
 
+                  {/* Error message */}
                   {state?.error && (
                     <div className="text-sm text-red-600">{state.error}</div>
                   )}
 
+                  {/* Submit */}
                   <Submit className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-md">
                     Login
                   </Submit>
                 </div>
               </form>
+
+              {/* Divider */}
+              <div className="flex items-center my-6">
+                <hr className="flex-1 border-gray-300 dark:border-gray-600" />
+                <span className="px-3 text-gray-500 text-sm">
+                  or continue with
+                </span>
+                <hr className="flex-1 border-gray-300 dark:border-gray-600" />
+              </div>
+
+              {/* OAuth Buttons */}
+              <div className="flex flex-col gap-3">
+                <Button
+                  variant="outline"
+                  className="w-full flex items-center justify-center gap-2 border border-gray-300 hover:bg-gray-100 transition"
+                  onClick={handleGoogleLogin}
+                >
+                  <FcGoogle className="text-xl" /> Continue with Google
+                </Button>
+
+                <Button
+                  variant="outline"
+                  className="w-full flex items-center justify-center gap-2 border border-gray-300 hover:bg-blue-50 transition"
+                  onClick={handleFacebookLogin}
+                >
+                  <FaFacebook className="text-blue-600 text-xl" /> Continue with
+                  Facebook
+                </Button>
+
+                <Button
+                  variant="outline"
+                  className="w-full flex items-center justify-center gap-2 border border-gray-300 hover:bg-gray-100 transition"
+                  onClick={handleGithubLogin}
+                >
+                  <FaGithub className="text-gray-800 text-xl" /> Continue with
+                  GitHub
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </div>
