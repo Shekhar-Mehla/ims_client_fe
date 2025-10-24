@@ -48,7 +48,7 @@ const ForgotPassword = () => {
       className="relative flex min-h-screen items-center justify-center bg-cover bg-center bg-no-repeat p-4"
       style={{
         backgroundImage:
-          "url('https://images.unsplash.com/photo-1593642634367-d91a135587b5?auto=format&fit=crop&w=1920&q=80')",
+          "url('https://images.unsplash.com/photo-1593642634367-d91a135587b5?auto=format&fit=crop&w=1920&q=80')"
       }}
     >
       {/* Gentle gradient overlay */}
