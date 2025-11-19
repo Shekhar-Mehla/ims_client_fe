@@ -1,12 +1,115 @@
-import React from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 const Register = () => {
+  const [showPassword, setShowPassword] = useState(false);
   return (
-    <div className="h-screen">
-      Register coming soon.... Lorem ipsum dolor sit amet consectetur
-      adipisicing elit. Autem quae blanditiis, labore veritatis obcaecati fugit
-      enim odio vel adipisci dolor. Dicta id, soluta dolorum numquam error
-      voluptatum consequatur quas iure!
+    <div className="bg-gradient-to-b from-amber-50 to-amber-200 min-h-screen flex items-center justify-center">
+      <div className="flex sm:flex-row flex-col items-stretch m-8 rounded-2xl gap-4 p-4 shadow-lg bg-amber-100">
+        <img
+          src="/public/1.jpg"
+          alt=""
+          className="sm:w-1/2 w-full h-96 sm:h-auto object-cover rounded-lg "
+        />
+
+        <Card className="w-full sm:w-1/2   ">
+          <CardHeader>
+            <CardTitle className="text-4xl text-center">Sign up</CardTitle>
+            <CardDescription>
+              Enter your detials to create your account
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form>
+              <div className="flex flex-col gap-6">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="fname">First Name *</Label>
+                    <Input id="fname" type="text" placeholder="john" required />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="lname">First Name *</Label>
+                    <Input
+                      id="lname"
+                      type="text"
+                      placeholder="Abraham"
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="m@example.com"
+                    required
+                  />
+                </div>
+                {/* password and conform password */}
+                <div className="grid grid-cols-2 gap-2">
+                  {/* Password Field */}
+                  <div className="grid gap-2">
+                    <Label htmlFor="password">Password</Label>
+                    <div className="relative">
+                      <Input
+                        id="password"
+                        type={showPassword ? "text" : "password"}
+                        required
+                        className="pr-10"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      >
+                        {showPassword ? (
+                          <EyeOff className="h-5 w-5" />
+                        ) : (
+                          <Eye className="h-5 w-5" />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Confirm Password Field */}
+                  <div className="grid gap-2">
+                    <Label htmlFor="confirm-password">Confirm Password</Label>
+                    <div className="relative">
+                      <Input
+                        id="confirm-password"
+                        type={showPassword ? "text" : "password"}
+                        required
+                        className="pr-10"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </CardContent>
+          <CardFooter className="flex-col gap-2">
+            <Button
+              type="submit"
+              className="w-full bg-green-500 hover:bg-green-600 rounded-full p-1 transition-colors"
+            >
+              Sign UP
+            </Button>
+          </CardFooter>
+        </Card>
+      </div>
     </div>
   );
 };

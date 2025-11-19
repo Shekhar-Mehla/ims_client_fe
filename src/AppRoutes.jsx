@@ -4,7 +4,8 @@ import DefaultLayout from "./components/CustomComponents/DefaultLayout";
 import Home from "./pages/Home";
 import Register from "./pages/authPages/Register";
 import ForgotPassword from "./pages/authPages/ForgotPassword";
-import Intership from "./pages/Intership";
+import InternshipList from "./pages/internship/InternshipList";
+import Intership from "./pages/internship/Intership";
 
 const AppRoutes = () => {
   return (
@@ -13,7 +14,11 @@ const AppRoutes = () => {
         <Route path="/" element={<Home></Home>}></Route>
         <Route path="login" element={<Login></Login>}></Route>
         <Route path="register" element={<Register></Register>}></Route>
-        <Route path="internships" element={<Intership></Intership>}></Route>
+        <Route
+          path="internships"
+          element={<InternshipList></InternshipList>}
+        ></Route>
+        <Route path="internship" element={<Intership></Intership>}></Route>
         <Route
           path="forgot-password"
           element={<ForgotPassword></ForgotPassword>}
