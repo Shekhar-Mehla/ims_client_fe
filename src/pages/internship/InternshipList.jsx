@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useEffect } from "react";
+
 import { Heart } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -17,8 +18,14 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { useDispatch } from "react-redux";
+import { fetchInternshipActions } from "../../features/internship/internshipaction.js";
 
 const InternshipList = () => {
+  const dispatch = useDispatch();
+  useEffect(() => {
+    dispatch(fetchInternshipActions());
+  }, [dispatch]);
   const [liked, setLiked] = useState(false);
   const [showCards, setShowCards] = useState(false);
   const handleCardClick = () => {
