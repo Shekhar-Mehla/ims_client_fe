@@ -10,9 +10,9 @@ const applicationSlice = createSlice({
     setApplications: (state, action) => {
       state.application = action.payload;
     },
-    getApplication: (state, action) => {
-      state.application = action.payload;
-    },
+    // getApplication: (state, action) => {
+    //   state.application = action.payload;
+    // },
   },
 });
 const { reducer, actions } = applicationSlice;
