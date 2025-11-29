@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useEffect } from "react";
+import { useDispatch } from "react-redux";
 import {
   Card,
   CardContent,
@@ -8,8 +9,13 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { MapPin, Star, Calendar, MessageCircle } from "lucide-react";
+import { fetchInternshipActions } from "../../features/internship/internshipaction.js";
 
 const Intership = () => {
+  const dispatch = useDispatch();
+  useEffect(() => {
+    dispatch(fetchInternshipActions());
+  }, [dispatch]);
   return (
     <div className="bg-gradient-to-br from-amber-100 to-yellow-200 min-h-screen w-full p-6 flex gap-6">
       {/* RIGHT SIDE */}
