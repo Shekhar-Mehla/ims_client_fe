@@ -1,6 +1,13 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import {
+  useParams,
+  useLocation,
+  useNavigate,
+  useSearchParams,
+} from "react-router-dom";
+import { useSelector } from "react-redux";
 import {
   Upload,
   ChevronLeft,
@@ -118,46 +125,64 @@ const FileUpload = ({
   );
 };
 
-const ApplicationFormPage = ({
-  internshipId = "default-id",
-  internshipTitle = "Graphic Designer Internship",
-  companyName = "Proviyaa Global",
-}) => {
+const ApplicationFormPage = () => {
+  const { internshipId } = useParams();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const internship = location.state?.internship;
+
+  // Check if user is logged in
+  const isLoggedIn = useSelector((state) => state.userInfo?.users?._id);
+
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
 
+  // Note: Authentication is now handled by ProtectedRoute at the route level
+  // Handle return URL after login (if redirected back here)
+  useEffect(() => {
+    const returnUrl = searchParams.get("returnUrl");
+    if (returnUrl && returnUrl !== window.location.pathname) {
+      // User was redirected here after login, redirect them to where they originally wanted to go
+      navigate(returnUrl);
+    }
+  }, [searchParams, navigate]);
+
+  // Prefilled dummy data for testing purposes
   const [formData, setFormData] = useState({
-    email: "",
+    email: "john.doe@example.com",
     countryCode: "+91",
-    mobile: "",
-    firstName: "",
-    lastName: "",
-    gender: "",
-    dateOfBirth: "",
-    address: "",
-    city: "",
-    state: "",
-    pincode: "",
-    educationLevel: "",
-    institutionName: "",
-    degree: "",
-    fieldOfStudy: "",
-    graduationYear: "",
-    cgpa: "",
-    skills: "",
-    linkedinUrl: "",
-    portfolioUrl: "",
-    githubUrl: "",
-    startDate: "",
-    duration: "",
-    expectedStipend: "",
-    workMode: "",
-    coverLetter: "",
-    whyThisInternship: "",
+    mobile: "9876543210",
+    firstName: "John",
+    lastName: "Doe",
+    gender: "male",
+    dateOfBirth: "2000-05-15",
+    address: "123 Main Street, Apartment 4B",
+    city: "Mumbai",
+    state: "Maharashtra",
+    pincode: "400001",
+    educationLevel: "undergraduate",
+    institutionName: "Indian Institute of Technology Bombay",
+    degree: "Bachelor of Technology",
+    fieldOfStudy: "Computer Science and Engineering",
+    graduationYear: "2024",
+    cgpa: "8.5",
+    skills: "React, Node.js, Python, JavaScript, Git, MongoDB, Express.js",
+    linkedinUrl: "https://linkedin.com/in/johndoe",
+    portfolioUrl: "https://johndoe.dev",
+    githubUrl: "https://github.com/johndoe",
+    startDate: "2024-06-01",
+    duration: "3",
+    expectedStipend: "25000",
+    workMode: "hybrid",
+    coverLetter:
+      "I am excited to apply for this internship position. With my background in computer science and hands-on experience with modern web technologies, I am confident I can contribute effectively to your team. I am particularly interested in this opportunity because it aligns perfectly with my career goals and passion for software development.",
+    whyThisInternship:
+      "I am particularly drawn to this internship because it offers the opportunity to work on real-world projects using cutting-edge technologies. The chance to learn from experienced professionals and contribute to meaningful solutions is exactly what I'm looking for in my first professional experience.",
     resume: null,
     portfolio: null,
-    agreeTerms: false,
+    agreeTerms: true,
   });
 
   const handleInputChange = (e) => {
@@ -241,9 +266,24 @@ const ApplicationFormPage = ({
     setIsSubmitting(true);
 
     try {
+      // Prepare application data
+      const applicationData = {
+        ...formData,
+        internshipId,
+        internshipTitle: internship?.title,
+        companyName: internship?.company,
+      };
+
+      // Here you would typically send the data to your backend
+      console.log("Submitting application:", applicationData);
+
       await new Promise((resolve) => setTimeout(resolve, 2000));
 
-      alert("Application submitted successfully!");
+      alert(
+        `Application submitted successfully for ${
+          internship?.title || "the internship"
+        }!`
+      );
 
       setFormData({
         email: "",
@@ -286,6 +326,7 @@ const ApplicationFormPage = ({
     }
   };
 
+  // Show loading while checking authentication
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-4 md:py-12 px-4">
       <Card className="max-w-4xl mx-auto shadow-xl">
@@ -298,10 +339,10 @@ const ApplicationFormPage = ({
             </div>
             <div>
               <h1 className="text-lg md:text-2xl font-bold text-slate-800">
-                {internshipTitle}
+                {internship?.title || "Internship Application"}
               </h1>
               <p className="text-xs md:text-sm text-slate-600 mt-1">
-                {companyName}
+                {internship?.company || "Company Name"}
               </p>
             </div>
           </div>

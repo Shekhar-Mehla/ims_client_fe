@@ -15,7 +15,7 @@ import { Label } from "@/components/ui/label";
 import Submit from "../../components/CustomComponents/Submit";
 import { useActionState } from "react";
 import { Mail, Lock } from "lucide-react";
-import { Link } from "react-router";
+import { Link, useNavigate, useSearchParams, useLocation } from "react-router";
 
 import { signInWithPopup } from "firebase/auth";
 import {
@@ -26,8 +26,17 @@ import {
 } from "../../firebase/firebase-config.js";
 import { FcGoogle } from "react-icons/fc";
 import { FaFacebook, FaGithub } from "react-icons/fa";
+import { useDispatch } from "react-redux";
+import { loginAction } from "../../features/user/useraction.js";
 
 const Login = () => {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const returnUrl = searchParams.get("returnUrl");
+  console.log(returnUrl);
+
   const handleOnSubmit = async (prevState, formData) => {
     const email = formData.get("email");
     const password = formData.get("password");
@@ -35,15 +44,31 @@ const Login = () => {
     if (!email) {
       return { error: "email is not valid" };
     }
-    // simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 3002));
-    if (email === "smehla147@gmail.com" && password === "123") {
-      return "success";
-    } else {
-      return { error: "invalid credentials" };
+
+    try {
+      const {status} = await dispatch(loginAction({ email, password }));
+      console.log(status);
+      
+
+      // Navigate after successful login
+      if (returnUrl) {
+        // If returning to application form, preserve the internship data
+        if (returnUrl.startsWith("/apply/")) {
+          const internship = location.state?.internship;
+          navigate(returnUrl, { state: { internship } });
+        } else {
+          navigate(returnUrl);
+        }
+      } else {
+        navigate("/");
+      }
+
+      return { success: true };
+    } catch (error) {
+      console.error("Login dispatch error:", error);
+      return { error: error.message || "Login failed" };
     }
   };
- 
 
   const [state, formAction] = useActionState(handleOnSubmit, {});
 
@@ -52,6 +77,17 @@ const Login = () => {
     try {
       const result = await signInWithPopup(auth, googleProvider);
       console.log("✅ Google Login Success:", result.user);
+
+      // Dispatch login action to update Redux state
+      // Note: OAuth login might need different handling for Redux state
+
+      // Set success state to trigger navigation
+      // This might need adjustment based on how OAuth login integrates with Redux
+      navigate(returnUrl || "/", {
+        state: returnUrl?.startsWith("/apply/")
+          ? { internship: location.state?.internship }
+          : undefined,
+      });
     } catch (error) {
       console.error("❌ Google Login Error:", error.message);
     }
@@ -61,6 +97,18 @@ const Login = () => {
     try {
       const result = await signInWithPopup(auth, facebookProvider);
       console.log("✅ Facebook Login Success:", result.user);
+
+      // Navigate directly for OAuth (bypass Redux for now)
+      if (returnUrl) {
+        if (returnUrl.startsWith("/apply/")) {
+          const internship = location.state?.internship;
+          navigate(returnUrl, { state: { internship } });
+        } else {
+          navigate(returnUrl);
+        }
+      } else {
+        navigate("/");
+      }
     } catch (error) {
       console.error("❌ Facebook Login Error:", error.message);
     }
@@ -70,6 +118,18 @@ const Login = () => {
     try {
       const result = await signInWithPopup(auth, githubProvider);
       console.log("✅ GitHub Login Success:", result.user);
+
+      // Navigate directly for OAuth (bypass Redux for now)
+      if (returnUrl) {
+        if (returnUrl.startsWith("/apply/")) {
+          const internship = location.state?.internship;
+          navigate(returnUrl, { state: { internship } });
+        } else {
+          navigate(returnUrl);
+        }
+      } else {
+        navigate("/");
+      }
     } catch (error) {
       console.error("❌ GitHub Login Error:", error.message);
     }
@@ -114,6 +174,14 @@ const Login = () => {
               <CardDescription className="text-gray-600 dark:text-gray-300 mt-1">
                 Enter your email and password below
               </CardDescription>
+              {returnUrl && returnUrl.startsWith("/apply/") && (
+                <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-sm text-blue-700">
+                    🔄 You'll be redirected back to the application form after
+                    login
+                  </p>
+                </div>
+              )}
               <CardAction>
                 <Link
                   to="/register"
@@ -138,6 +206,7 @@ const Login = () => {
                         type="email"
                         placeholder="m@example.com"
                         name="email"
+                        defaultValue="smehla147@gmail.com"
                         className="pl-9"
                       />
                     </div>
@@ -160,6 +229,7 @@ const Login = () => {
                         id="password"
                         type="password"
                         name="password"
+                        defaultValue="12345678"
                         className="pl-9"
                       />
                     </div>
@@ -171,9 +241,11 @@ const Login = () => {
                   )}
 
                   {/* Submit */}
-                  <Submit className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-md">
-                    Login
-                  </Submit>
+                  <Submit
+                    title="Login"
+                    loadingText="Logging in..."
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-md"
+                  />
                 </div>
               </form>
 

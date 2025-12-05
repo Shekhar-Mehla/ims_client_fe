@@ -1,4 +1,3 @@
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardAction,
@@ -12,27 +11,59 @@ import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import UseForm from "../../hooks/UseForm";
+import Submit from "../../components/CustomComponents/Submit";
+import { useActionState } from "react";
 import { registerUser } from "../../features/user/userapi.js";
-import { toast } from "react-toastify";
 
 const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
-  const { handleOnChange, form, setForm } = UseForm({});
 
-  const handleOnSubmit = async (e) => {
-    e.preventDefault();
-    // Handle form submission logic here
-    const { confirmpassword, ...rest } = form;
-    const response = await registerUser(rest);
-    console.log(response);
-    if (response?.status === "success") {
-      toast.success("Registration successful! Please verify your email.");
-      // setForm({});
-    } else {
-      toast.error("Registration failed. Please try again.");
+  const handleOnSubmit = async (prevState, formData) => {
+    const fName = formData.get("fName");
+    const lName = formData.get("lName");
+    const email = formData.get("email");
+    const password = formData.get("password");
+    const confirmPassword = formData.get("confirmpassword");
+
+    if (!fName || !lName || !email || !password || !confirmPassword) {
+      return { error: "All fields are required" };
+    }
+
+    if (!email.includes("@")) {
+      return { error: "Please enter a valid email address" };
+    }
+
+    if (password !== confirmPassword) {
+      return { error: "Passwords do not match" };
+    }
+
+    try {
+      const userData = {
+        fName,
+        lName,
+        email,
+        password,
+        technologies: [],
+        sectors: [],
+        roles: [],
+      };
+      const response = await registerUser(userData);
+      console.log(response);
+      if (response?.status === "success") {
+        return "success";
+      } else {
+        return {
+          error: response?.message || "Registration failed. Please try again.",
+        };
+      }
+    } catch (error) {
+      return {
+        error: error.message || "Registration failed. Please try again.",
+      };
     }
   };
+
+  const [state, formAction] = useActionState(handleOnSubmit, {});
   return (
     <div className="bg-gradient-to-b from-amber-50 to-amber-200 min-h-screen flex items-center justify-center">
       <div className="flex sm:flex-row flex-col items-stretch m-8 rounded-2xl gap-4 p-4 shadow-lg bg-amber-100">
@@ -50,7 +81,7 @@ const Register = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleOnSubmit}>
+            <form action={formAction}>
               <div className="flex flex-col gap-6">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="grid gap-2">
@@ -60,21 +91,19 @@ const Register = () => {
                       name="fName"
                       type="text"
                       placeholder="john"
-                      value={form.fName}
+                      defaultValue="sm"
                       required
-                      onChange={handleOnChange}
                     />
                   </div>
                   <div className="grid gap-2">
-                    <Label htmlFor="lName">First Name *</Label>
+                    <Label htmlFor="lName">Last Name *</Label>
                     <Input
                       id="lName"
                       name="lName"
                       type="text"
                       placeholder="Abraham"
+                      defaultValue="meh"
                       required
-                      value={form.lName}
-                      onChange={handleOnChange}
                     />
                   </div>
                 </div>
@@ -85,9 +114,8 @@ const Register = () => {
                     name="email"
                     type="email"
                     placeholder="m@example.com"
-                    value={form.email}
+                    defaultValue="smehla147@gmail.com"
                     required
-                    onChange={handleOnChange}
                   />
                 </div>
                 {/* password and conform password */}
@@ -100,10 +128,9 @@ const Register = () => {
                         id="password"
                         name="password"
                         type={showPassword ? "text" : "password"}
+                        defaultValue="12345678"
                         required
                         className="pr-10"
-                        value={form.password}
-                        onChange={handleOnChange}
                       />
                       <button
                         type="button"
@@ -127,20 +154,25 @@ const Register = () => {
                         id="confirmpassword"
                         name="confirmpassword"
                         type={showPassword ? "text" : "password"}
+                        defaultValue="12345678"
                         required
                         className="pr-10"
                       />
                     </div>
                   </div>
                 </div>
+
+                {/* Error message */}
+                {state?.error && (
+                  <div className="text-sm text-red-600">{state.error}</div>
+                )}
               </div>
               <CardFooter className="flex-col gap-2">
-                <Button
-                  type="submit"
+                <Submit
+                  title="Sign UP"
+                  loadingText="Creating account..."
                   className="w-full bg-green-500 hover:bg-green-600 rounded-full p-1 transition-colors cursor-pointer text-lg font-semibold text-white"
-                >
-                  Sign UP
-                </Button>
+                />
               </CardFooter>
             </form>
           </CardContent>
