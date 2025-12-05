@@ -1,13 +1,40 @@
 "use client";
 
 import React, { useState } from "react";
-import { Menu, X, Search, Home, Briefcase, Info, Mail } from "lucide-react";
+import {
+  Menu,
+  X,
+  Search,
+  Home,
+  Briefcase,
+  Info,
+  Mail,
+  User,
+  LogOut,
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
+import { useSelector, useDispatch } from "react-redux";
+import { logoutAction } from "../../features/user/useraction.js";
 
 const Header = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const toggleMobileMenu = () => setMobileOpen(!mobileOpen);
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  // Check if user is authenticated
+  const isAuthenticated = useSelector((state) => state.userInfo?.users?._id);
+  const user = useSelector((state) => state.userInfo?.users);
+
+  const handleLogout = async () => {
+    try {
+      await dispatch(logoutAction());
+      navigate("/");
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+  };
 
   const links = [
     { name: "Home", href: "/", icon: <Home className="w-4 h-4" /> },
@@ -50,17 +77,48 @@ const Header = () => {
             </Link>
           ))}
 
-          {/* Login / Sign Up */}
-          <Link to="/login">
-            <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 rounded-md transition">
-              Login
-            </button>
-          </Link>
-          <Link to="/register">
-            <button className="bg-green-600 hover:bg-green-700 text-white px-4 py-1 rounded-md transition">
-              Sign Up
-            </button>
-          </Link>
+          {isAuthenticated ? (
+            /* Authenticated User */
+            <div className="flex items-center gap-3">
+              {/* Profile Avatar */}
+              <div
+                onClick={() => navigate("/profile")}
+                className="flex items-center gap-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-neutral-800 p-2 rounded-lg transition-colors"
+              >
+                <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                  {user?.firstName?.charAt(0)?.toUpperCase() ||
+                    user?.email?.charAt(0)?.toUpperCase() ||
+                    "U"}
+                </div>
+                <span className="text-gray-700 dark:text-gray-200 font-medium hidden lg:block">
+                  {user?.firstName || user?.email?.split("@")[0] || "User"}
+                </span>
+              </div>
+
+              {/* Logout Button */}
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-md transition"
+              >
+                <LogOut className="w-4 h-4" />
+                <span className="hidden lg:block">Logout</span>
+              </button>
+            </div>
+          ) : (
+            /* Non-authenticated User */
+            <>
+              <Link to="/login">
+                <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 rounded-md transition">
+                  Login
+                </button>
+              </Link>
+              <Link to="/register">
+                <button className="bg-green-600 hover:bg-green-700 text-white px-4 py-1 rounded-md transition">
+                  Sign Up
+                </button>
+              </Link>
+            </>
+          )}
         </div>
 
         {/* Mobile Hamburger */}
@@ -102,16 +160,57 @@ const Header = () => {
             />
           </div>
 
-          <Link to="/login">
-            <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 rounded-md mt-2 transition">
-              Login
-            </button>
-          </Link>
-          <Link to="/register">
-            <button className="bg-green-600 hover:bg-green-700 text-white px-4 py-1 rounded-md mt-2 transition">
-              Sign Up
-            </button>
-          </Link>
+          {isAuthenticated ? (
+            /* Authenticated User - Mobile */
+            <>
+              {/* Profile Link */}
+              <div
+                onClick={() => {
+                  navigate("/profile");
+                  setMobileOpen(false);
+                }}
+                className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
+              >
+                <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold">
+                  {user?.firstName?.charAt(0)?.toUpperCase() ||
+                    user?.email?.charAt(0)?.toUpperCase() ||
+                    "U"}
+                </div>
+                <div>
+                  <div className="text-gray-700 dark:text-gray-200 font-medium">
+                    {user?.firstName || user?.email?.split("@")[0] || "User"}
+                  </div>
+                  <div className="text-sm text-gray-500">View Profile</div>
+                </div>
+              </div>
+
+              {/* Logout Button */}
+              <button
+                onClick={() => {
+                  handleLogout();
+                  setMobileOpen(false);
+                }}
+                className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md mt-2 transition w-full justify-center"
+              >
+                <LogOut className="w-4 h-4" />
+                Logout
+              </button>
+            </>
+          ) : (
+            /* Non-authenticated User - Mobile */
+            <>
+              <Link to="/login">
+                <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 rounded-md mt-2 transition w-full">
+                  Login
+                </button>
+              </Link>
+              <Link to="/register">
+                <button className="bg-green-600 hover:bg-green-700 text-white px-4 py-1 rounded-md mt-2 transition w-full">
+                  Sign Up
+                </button>
+              </Link>
+            </>
+          )}
         </div>
       )}
     </nav>

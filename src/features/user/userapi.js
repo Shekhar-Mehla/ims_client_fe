@@ -22,7 +22,27 @@ export const loginUser = async (userData) => {
 };
 
 export const verifyEmail = async (token) => {
+  console.log(token);
   const url = `${userApi}/verify-email?token=${token}`;
   const method = "GET";
   return await apiProcessor({ url, method });
+};
+
+export const getUserProfile = async () => {
+  const url = `${userApi}/profile`;
+  const method = "GET";
+  return await apiProcessor({ url, method, isPrivate: true });
+};
+
+export const logoutUser = async () => {
+  const url = `${userApi}/logout`;
+  const method = "POST";
+  return await apiProcessor({ url, method, isPrivate: true });
+};
+
+export const changePassword = async (passwordData) => {
+  const url = `${userApi}/change-password`;
+  const method = "POST";
+  const payload = passwordData;
+  return await apiProcessor({ url, method, payload, isPrivate: true });
 };
