@@ -986,4 +986,5 @@ const ApplicationFormPage = ({
     </div>
   );
 };
+
 export default ApplicationFormPage;
