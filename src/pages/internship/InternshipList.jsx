@@ -17,10 +17,12 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { fetchInternshipActions } from "../../features/internship/internshipaction.js";
+import { useLocation } from "react-router-dom";
 
 const InternshipList = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
   const { internships, loading, error } = useSelector(
     (state) => state.internshipInfo
   );
@@ -37,10 +39,10 @@ const InternshipList = () => {
 
   useEffect(() => {
     dispatch(fetchInternshipActions());
-  }, [dispatch]);
+  }, [dispatch, location.key]);
 
   const handleCardClick = (internship) => {
-    console.log("Card clicked for:", internship.title);
+    navigate(`/internship/${internship}`);
   };
 
   const handleFilterChange = (filterType, value) => {
@@ -324,7 +326,7 @@ const InternshipList = () => {
                       <Card
                         key={internship._id}
                         className="border rounded-xl shadow-md overflow-hidden transition-transform duration-300 hover:shadow-xl hover:-translate-y-1"
-                        onClick={() => handleCardClick(internship)}
+                        onClick={() => handleCardClick(internship.slug)}
                       >
                         {/* Card Header */}
                         <CardHeader className="p-4">
@@ -441,7 +443,7 @@ const InternshipList = () => {
                         </CardContent>
 
                         {/* Card Footer */}
-                        <CardFooter className="p-4 border-t bg-gray-50">
+                        {/* <CardFooter className="p-4 border-t bg-gray-50">
                           <Button
                             className="w-full bg-amber-500 hover:bg-amber-600 text-white font-medium py-2.5"
                             onClick={(e) => {
@@ -453,7 +455,7 @@ const InternshipList = () => {
                           >
                             Apply Now
                           </Button>
-                        </CardFooter>
+                        </CardFooter> */}
                       </Card>
                     ))}
                   </div>

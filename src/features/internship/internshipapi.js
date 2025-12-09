@@ -7,3 +7,9 @@ export const getAllInternships = async () => {
   const method = "GET";
   return await apiProcessor({ url, method });
 };
+
+export const getInternshipBySlug = async (slug) => {
+  const url = `${internshipApi}/${slug}`;
+  const method = "GET";
+  return await apiProcessor({ url, method });
+};

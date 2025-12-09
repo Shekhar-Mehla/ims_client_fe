@@ -46,3 +46,9 @@ export const changePassword = async (passwordData) => {
   const payload = passwordData;
   return await apiProcessor({ url, method, payload, isPrivate: true });
 };
+
+export const fetchNewAccessTokenApi = async () => {
+  const url = `${userApi}/renwew-access-token`;
+  const method = "POST";
+  return await apiProcessor({ url, method, isPrivate: true });
+};

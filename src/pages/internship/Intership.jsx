@@ -1,5 +1,7 @@
 import React, { useEffect } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { useParams, useNavigate } from "react-router-dom";
+
 import {
   Card,
   CardContent,
@@ -9,13 +11,23 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { MapPin, Star, Calendar, MessageCircle } from "lucide-react";
-import { fetchInternshipActions } from "../../features/internship/internshipaction.js";
+import { fetchInternshipBySlugActions } from "../../features/internship/internshipaction.js";
 
 const Intership = () => {
+  const { slug } = useParams();
+  console.log(slug, " slug from params");
+  const navigate = useNavigate();
+  const { internships, loading, error } = useSelector(
+    (state) => state.internshipInfo
+  );
   const dispatch = useDispatch();
   useEffect(() => {
-    dispatch(fetchInternshipActions());
-  }, [dispatch]);
+    dispatch(fetchInternshipBySlugActions(slug));
+  }, [dispatch, slug]);
+
+  const handleOnApplyNow = () => {
+    navigate(`/internship/${slug}/apply`);
+  };
   return (
     <div className="bg-gradient-to-br from-amber-100 to-yellow-200 min-h-screen w-full p-6 flex gap-6">
       {/* RIGHT SIDE */}
@@ -25,10 +37,10 @@ const Intership = () => {
 
           <div className="flex flex-col gap-3">
             <h1 className="text-2xl font-bold text-gray-800">
-              Frontend Developer Internship at TechNova Pvt. Ltd.
+              {internships.title}
             </h1>
             <p className="text-gray-600 flex items-center gap-2">
-              <MapPin size={18} /> Bengaluru, India
+              <MapPin size={18} /> {internships.location}
             </p>
           </div>
         </div>
@@ -37,7 +49,7 @@ const Intership = () => {
         <div className="flex justify-between items-center bg-white p-4 rounded-2xl shadow-lg">
           <a href="#details">
             <Button className="bg-amber-100 text-black rounded-xl border border-amber-500 px-4 py-2">
-              Internship Details
+              Details
             </Button>
           </a>
           <Button className="bg-amber-100 text-black rounded-xl border border-amber-500 px-4 py-2">
@@ -55,12 +67,7 @@ const Intership = () => {
         <div className="bg-white p-6 rounded-2xl shadow-xl" id="details">
           <h1 className="text-xl font-semibold mb-3">Details</h1>
           <p className="text-gray-700 leading-relaxed">
-            Lorem ipsum dolor sit amet, consectetur adipisicing elit. Impedit
-            earum, accusantium illo et aut sed odit placeat. Aliquid quia
-            nesciunt sit delectus doloribus similique, vitae nihil sequi totam
-            maiores perspiciatis? Lorem ipsum dolor sit amet consectetur
-            adipisicing elit. Magnam dolorem totam dignissimos, nostrum impedit
-            necessitatibus!
+            {internships.description}
           </p>
         </div>
       </div>
@@ -89,7 +96,12 @@ const Intership = () => {
             </p>
           </CardContent>
           <CardFooter>
-            <Button className="w-full bg-blue-600 text-white py-3 rounded-xl shadow-md">
+            <Button
+              className="w-full bg-blue-600 text-white py-3 rounded-xl shadow-md"
+              onClick={() => {
+                handleOnApplyNow();
+              }}
+            >
               Apply Now
             </Button>
           </CardFooter>
