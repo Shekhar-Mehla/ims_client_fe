@@ -1,6 +1,7 @@
+import { CloudHail } from "lucide-react";
 import { apiProcessor } from "../../services/apiprocessor.js";
 
-const apiBaseUrl = import.meta.env.VITE_BASE_API_URL;
+const apiBaseUrl = import.meta.env.VITE_BASE_API_URL || "http://localhost:8001";
 
 export const userApi = apiBaseUrl + "/api/v1/auth";
 
@@ -34,10 +35,13 @@ export const getUserProfile = async () => {
   return await apiProcessor({ url, method, isPrivate: true });
 };
 
-export const logoutUser = async () => {
+export const logoutUser = async (authId) => {
+  const payload = { authId };
+
   const url = `${userApi}/logout`;
   const method = "POST";
-  return await apiProcessor({ url, method, isPrivate: true });
+
+  return await apiProcessor({ url, method, payload });
 };
 
 export const changePassword = async (passwordData) => {

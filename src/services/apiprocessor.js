@@ -15,20 +15,21 @@ export const apiProcessor = async ({
   isPrivate,
   isAcessJWT = true,
 }) => {
-  console.log(payload, url, method);
   try {
     const headers = {};
     if (isPrivate) {
       const token = isAcessJWT ? getAccessToken() : getRefreshToken();
       headers.authorization = `Bearer ${token}`;
     }
+    console.log(payload);
+
     const responsePending = axios({
       url,
       method,
       data: payload,
       headers,
     });
-    console.log(responsePending);
+
     toast.promise(responsePending, {
       pending: "Processing your request...",
     });

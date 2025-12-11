@@ -26,10 +26,12 @@ const Header = () => {
   // Check if user is authenticated
   const isAuthenticated = useSelector((state) => state.userInfo?.users?._id);
   const user = useSelector((state) => state.userInfo?.users);
+  const { authId } = useSelector((state) => state.userInfo.users);
+  
 
   const handleLogout = async () => {
     try {
-      await dispatch(logoutAction());
+      await dispatch(logoutAction(authId));
       navigate("/");
     } catch (error) {
       console.error("Logout failed:", error);

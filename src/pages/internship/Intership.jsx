@@ -55,10 +55,26 @@ const Intership = () => {
           <Button className="bg-amber-100 text-black rounded-xl border border-amber-500 px-4 py-2">
             Dates & Duration
           </Button>
-          <Button className="bg-amber-100 text-black rounded-xl border border-amber-500 px-4 py-2">
+          <Button
+            onClick={() => setActiveTab("reviews")}
+            className={`${
+              activeTab === "reviews"
+                ? "bg-amber-500 text-white"
+                : "bg-amber-100 text-black"
+            } rounded-xl border border-amber-500 px-4 py-2 hover:bg-amber-500 hover:text-white transition-colors`}
+          >
+            <MessageSquare size={16} className="mr-2" />
             Reviews
           </Button>
-          <Button className="bg-amber-100 text-black rounded-xl border border-amber-500 px-4 py-2">
+          <Button
+            onClick={() => setActiveTab("faq")}
+            className={`${
+              activeTab === "faq"
+                ? "bg-amber-500 text-white"
+                : "bg-amber-100 text-black"
+            } rounded-xl border border-amber-500 px-4 py-2 hover:bg-amber-500 hover:text-white transition-colors`}
+          >
+            <HelpCircle size={16} className="mr-2" />
             FAQ
           </Button>
         </div>
@@ -86,14 +102,23 @@ const Intership = () => {
           </CardHeader>
           <CardContent>
             <p className="text-gray-600 flex gap-2 items-center">
-              <Calendar size={18} /> Duration: 3 Months
+              <Calendar size={18} /> Duration: {duration || "3 Months"}
             </p>
             <p className="text-gray-600 flex gap-2 items-center">
-              <Star size={18} /> Rating: 4.7/5
+              <ClockFading size={18} /> Stipend: {stipend || "₹15,000-30,000"}
             </p>
             <p className="text-gray-600 flex gap-2 items-center">
-              <MessageCircle size={18} /> 120+ Reviews
+              <Star size={18} /> Rating: {rating || 4.7}/5
             </p>
+            <p className="text-gray-600 flex gap-2 items-center">
+              <MessageCircle size={18} /> {reviewCount || 120}+ Reviews
+            </p>
+            {applicationDeadline && (
+              <p className="text-red-600 flex gap-2 items-center text-sm mt-2">
+                <Calendar size={16} /> Deadline:{" "}
+                {new Date(applicationDeadline).toLocaleDateString()}
+              </p>
+            )}
           </CardContent>
           <CardFooter>
             <Button

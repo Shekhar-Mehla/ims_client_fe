@@ -97,13 +97,13 @@ export const changePasswordAction = (passwordData) => {
   };
 };
 
-export const logoutAction = () => {
+export const logoutAction = (authId) => {
   return async (dispatch) => {
     try {
       console.log("Logout action called");
 
       // Call the logout API to clear server-side tokens/sessions
-      const logoutResponse = await logoutUser();
+      const logoutResponse = await logoutUser(authId);
       console.log("Logout API response:", logoutResponse);
 
       // Clear tokens from browser storage regardless of API response

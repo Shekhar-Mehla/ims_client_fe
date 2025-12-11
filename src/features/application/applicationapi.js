@@ -1,12 +1,13 @@
 import { apiProcessor } from "../../services/apiprocessor";
-const apiBaseUrl = import.meta.env.VITE_BASE_API_URL;
+const apiBaseUrl = import.meta.env.VITE_BASE_API_URL || "http://localhost:8001";
 
-const applicationApi = apiBaseUrl + "/api/v1/applicatiom";
+const applicationApi = apiBaseUrl + "/api/v1/application";
 export const applyForInternship = async (applicationData) => {
   const url = `${applicationApi}/apply`;
   const method = "POST";
   const payload = applicationData;
-  return await apiProcessor({ url, method, payload });
+  const isPrivate = true;
+  return await apiProcessor({ url, method, payload, isPrivate });
 };
 export const getApplicationsByUser = async (userId) => {
   const url = `${applicationApi}/user/${userId}`;
