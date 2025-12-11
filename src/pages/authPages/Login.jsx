@@ -81,8 +81,8 @@ const Login = () => {
     }
 
     try {
-      const result = await dispatch(loginAction({ email, password }));
-      console.log(result);
+      const results = await dispatch(loginAction({ email, password }));
+      console.log(results);
 
       // Navigate after successfulr login
       // if (returnUrl) {
