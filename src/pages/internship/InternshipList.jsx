@@ -446,7 +446,7 @@ const InternshipList = () => {
                             className="w-full bg-amber-500 hover:bg-amber-600 text-white font-medium py-2.5"
                             onClick={(e) => {
                               e.stopPropagation();
-                              navigate(`/apply/${internship._id}`, {
+                              navigate(`/internship/${internship._id}`, {
                                 state: { internship },
                               });
                             }}

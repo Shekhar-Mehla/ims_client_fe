@@ -6,8 +6,9 @@ import {
   useLocation,
   useNavigate,
   useSearchParams,
+  Navigate,
 } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import {
   Upload,
   ChevronLeft,
@@ -21,6 +22,73 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import UseForm from "../hooks/UseForm";
+import ReviewSummary from "../components/CustomComponents/ReviewSummary";
+import { applyForInternship } from "../features/application/applicationapi";
+import { logoutAction } from "../features/user/useraction";
+
+// const initialState = {
+//   firstName: "",
+//   lastName: "",
+//   email: "",
+//   countryCode: "+91",
+//   mobile: "",
+//   gender: "",
+//   dateOfBirth: "",
+//   address: "",
+//   city: "",
+//   state: "",
+//   pincode: "",
+//   educationLevel: "",
+//   institutionName: "",
+//   degree: "",
+//   fieldOfStudy: "",
+//   graduationYear: "",
+//   cgpa: "",
+//   skills: "",
+//   linkedinUrl: "",
+//   portfolioUrl: "",
+//   githubUrl: "",
+//   startDate: "",
+//   duration: "",
+//   expectedStipend: "",
+//   workMode: "",
+//   whyThisInternship: "",
+//   coverLetter: "",
+//   agreeTerms: false,
+// };
+
+const initialState = {
+  firstName: "John",
+  lastName: "Doe",
+  email: "john.doe@example.com",
+  countryCode: "+91",
+  mobile: "9876543210",
+  address: "221B Baker Street",
+  agreeTerms: true,
+  cgpa: "8.2",
+  city: "Mumbai",
+  dateOfBirth: "1998-05-21",
+  degree: "Bachelor of Technology",
+  duration: "6-months",
+  educationLevel: "graduate",
+  expectedStipend: "15000",
+  fieldOfStudy: "Computer Science",
+  gender: "male",
+  githubUrl: "https://github.com/johndoe",
+  graduationYear: "2024",
+  institutionName: "VJTI Mumbai",
+  linkedinUrl: "https://linkedin.com/in/johndoe",
+  pincode: "400001",
+  portfolioUrl: "https://johndoe.dev",
+  skills: "React, Node.js, MongoDB, TailwindCSS",
+  startDate: "2025-12-10",
+  state: "Maharashtra",
+  workMode: "hybrid",
+  whyThisInternship:
+    "I want to grow my development skills by working on real-world projects with experienced engineers.",
+  // Mock File (works for JS testing)
+};
 
 const ProgressBar = ({ currentStep, totalSteps }) => {
   const progress = (currentStep / totalSteps) * 100;
@@ -63,26 +131,7 @@ const ProgressBar = ({ currentStep, totalSteps }) => {
   );
 };
 
-const FileUpload = ({
-  label,
-  name,
-  accept,
-  required,
-  file,
-  setFile,
-  error,
-}) => {
-  const handleFileChange = (e) => {
-    const selectedFile = e.target.files[0];
-    if (selectedFile) {
-      if (selectedFile.size > 5 * 1024 * 1024) {
-        alert("File size should not exceed 5MB");
-        return;
-      }
-      setFile(selectedFile);
-    }
-  };
-
+const FileUpload = ({ label, name, accept, required, error, onChange }) => {
   return (
     <div className="grid gap-2">
       <Label htmlFor={name} className="text-sm font-medium text-slate-700">
@@ -95,9 +144,8 @@ const FileUpload = ({
           type="file"
           id={name}
           name={name}
-          onChange={handleFileChange}
           accept={accept}
-          className="hidden"
+          onChange={onChange}
         />
         <label
           htmlFor={name}
@@ -110,13 +158,8 @@ const FileUpload = ({
           <Upload className="w-5 h-5 md:w-6 md:h-6 text-slate-400 flex-shrink-0" />
           <div className="flex flex-col items-start">
             <span className="text-xs md:text-sm text-slate-600 font-medium truncate">
-              {file ? file.name : `Click to upload ${label.toLowerCase()}`}
+              Click to upload {label.toLowerCase()}
             </span>
-            {file && (
-              <span className="text-xs text-slate-500">
-                {(file.size / 1024).toFixed(2)} KB
-              </span>
-            )}
           </div>
         </label>
       </div>
@@ -128,202 +171,166 @@ const FileUpload = ({
 const ApplicationFormPage = () => {
   const { internshipId } = useParams();
   const location = useLocation();
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+
+  const dispatch = useDispatch();
+  const [currentStep, setCurrentStep] = useState(1);
+  const {
+    form,
+    setForm,
+    handleInputChange,
+    handleFileChange,
+    errors,
+    setErrors,
+  } = UseForm(initialState);
   const internship = location.state?.internship;
 
   // Check if user is logged in
-  const isLoggedIn = useSelector((state) => state.userInfo?.users?._id);
+  const profileId = useSelector((state) => state.userInfo?.users?._id);
+  const authId = useSelector((state) => state.userInfo?.users?.authId);
 
-  const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errors, setErrors] = useState({});
-
-  // Note: Authentication is now handled by ProtectedRoute at the route level
-  // Handle return URL after login (if redirected back here)
-  useEffect(() => {
-    const returnUrl = searchParams.get("returnUrl");
-    if (returnUrl && returnUrl !== window.location.pathname) {
-      // User was redirected here after login, redirect them to where they originally wanted to go
-      navigate(returnUrl);
-    }
-  }, [searchParams, navigate]);
-
-  // Prefilled dummy data for testing purposes
-  const [formData, setFormData] = useState({
-    email: "john.doe@example.com",
-    countryCode: "+91",
-    mobile: "9876543210",
-    firstName: "John",
-    lastName: "Doe",
-    gender: "male",
-    dateOfBirth: "2000-05-15",
-    address: "123 Main Street, Apartment 4B",
-    city: "Mumbai",
-    state: "Maharashtra",
-    pincode: "400001",
-    educationLevel: "undergraduate",
-    institutionName: "Indian Institute of Technology Bombay",
-    degree: "Bachelor of Technology",
-    fieldOfStudy: "Computer Science and Engineering",
-    graduationYear: "2024",
-    cgpa: "8.5",
-    skills: "React, Node.js, Python, JavaScript, Git, MongoDB, Express.js",
-    linkedinUrl: "https://linkedin.com/in/johndoe",
-    portfolioUrl: "https://johndoe.dev",
-    githubUrl: "https://github.com/johndoe",
-    startDate: "2024-06-01",
-    duration: "3",
-    expectedStipend: "25000",
-    workMode: "hybrid",
-    coverLetter:
-      "I am excited to apply for this internship position. With my background in computer science and hands-on experience with modern web technologies, I am confident I can contribute effectively to your team. I am particularly interested in this opportunity because it aligns perfectly with my career goals and passion for software development.",
-    whyThisInternship:
-      "I am particularly drawn to this internship because it offers the opportunity to work on real-world projects using cutting-edge technologies. The chance to learn from experienced professionals and contribute to meaningful solutions is exactly what I'm looking for in my first professional experience.",
-    resume: null,
-    portfolio: null,
-    agreeTerms: true,
-  });
-
-  const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }));
-    if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: "" }));
-    }
-  };
+  const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [submitMessage, setSubmitMessage] = useState("");
 
   const validateStep = (step) => {
-    const newErrors = {};
+    const stepErrors = {};
 
     if (step === 1) {
-      if (!formData.email || !/\S+@\S+\.\S+/.test(formData.email)) {
-        newErrors.email = "Valid email is required";
+      if (!form.firstName) stepErrors.firstName = "First name is required";
+      if (!form.email || !/\S+@\S+\.\S+/.test(form.email)) {
+        stepErrors.email = "Valid email is required";
       }
-      if (!formData.mobile || formData.mobile.length < 10) {
-        newErrors.mobile = "Valid mobile number is required";
+      if (!form.mobile || form.mobile.length < 10) {
+        stepErrors.mobile = "Valid mobile number is required";
       }
-      if (!formData.firstName) newErrors.firstName = "First name is required";
-      if (!formData.gender) newErrors.gender = "Gender is required";
-      if (!formData.dateOfBirth)
-        newErrors.dateOfBirth = "Date of birth is required";
-      if (!formData.city) newErrors.city = "City is required";
+      if (!form.gender) stepErrors.gender = "Gender is required";
+      if (!form.dateOfBirth)
+        stepErrors.dateOfBirth = "Date of birth is required";
+      if (!form?.city?.trim()) stepErrors.city = "City is required";
     }
 
     if (step === 2) {
-      if (!formData.educationLevel)
-        newErrors.educationLevel = "Education level is required";
-      if (!formData.institutionName)
-        newErrors.institutionName = "Institution name is required";
-      if (!formData.degree) newErrors.degree = "Degree is required";
-      if (!formData.fieldOfStudy)
-        newErrors.fieldOfStudy = "Field of study is required";
-      if (!formData.graduationYear)
-        newErrors.graduationYear = "Graduation year is required";
-      if (!formData.skills) newErrors.skills = "Skills are required";
+      if (!form?.educationLevel?.trim())
+        stepErrors.educationLevel = "Education level is required";
+      if (!form?.institutionName?.trim())
+        stepErrors.institutionName = "Institution name is required";
+      if (!form?.degree?.trim()) stepErrors.degree = "Degree is required";
+      if (!form?.fieldOfStudy?.trim())
+        stepErrors.fieldOfStudy = "Field of study is required";
+      if (!form?.graduationYear?.trim())
+        stepErrors.graduationYear = "Graduation year is required";
+      if (!form?.skills?.trim()) stepErrors.skills = "Skills are required";
     }
 
     if (step === 3) {
-      if (!formData.startDate) newErrors.startDate = "Start date is required";
-      if (!formData.duration) newErrors.duration = "Duration is required";
-      if (!formData.workMode) newErrors.workMode = "Work mode is required";
-      if (
-        !formData.whyThisInternship ||
-        formData.whyThisInternship.length < 50
-      ) {
-        newErrors.whyThisInternship = "Please write at least 50 characters";
+      if (!form.startDate) stepErrors.startDate = "Start date is required";
+      if (!form.duration) stepErrors.duration = "Duration is required";
+      if (!form.workMode) stepErrors.workMode = "Work mode is required";
+      if (!form.whyThisInternship || form.whyThisInternship.length < 50) {
+        stepErrors.whyThisInternship = "Please write at least 50 characters";
       }
-      if (!formData.resume) newErrors.resume = "Resume is required";
+      if (!form?.resume) {
+        stepErrors.resume = "Please upload your resume";
+      }
     }
 
-    if (step === 4) {
-      if (!formData.agreeTerms)
-        newErrors.agreeTerms = "You must agree to terms and conditions";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    return stepErrors;
   };
 
-  const handleNext = () => {
-    if (validateStep(currentStep)) {
-      setCurrentStep((prev) => Math.min(prev + 1, 4));
-      window.scrollTo({ top: 0, behavior: "smooth" });
+  // Form submission handler
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    // Validate all steps
+    const allErrors = {};
+    Object.assign(allErrors, validateStep(1));
+    Object.assign(allErrors, validateStep(2));
+    Object.assign(allErrors, validateStep(3));
+
+    // Check terms agreement
+    if (!form.agreeTerms) {
+      allErrors.agreeTerms = "You must agree to terms and conditions";
     }
+
+    // Check files
+    if (!form.resume || !(form.resume instanceof File)) {
+      allErrors.resume = "Resume is required";
+    } else if (form.resume.size > 5 * 1024 * 1024) {
+      allErrors.resume = "Resume size should not exceed 5MB";
+    }
+
+    if (
+      form.portfolio &&
+      form.portfolio instanceof File &&
+      form.portfolio.size > 5 * 1024 * 1024
+    ) {
+      allErrors.portfolio = "Portfolio size should not exceed 5MB";
+    }
+
+    if (Object.keys(allErrors).length > 0) {
+      setErrors(allErrors);
+      return;
+    }
+
+    setIsSubmitting(true);
+    setErrors({});
+
+    try {
+      const formData = new FormData();
+      Object.keys(form).forEach((key) => {
+        if (key === "resume" || key === "portfolio") {
+          return;
+        }
+        formData.append(key, form[key]);
+      });
+      if (form.resume && form.resume instanceof File) {
+        formData.append("resume", form.resume);
+      }
+      if (form.portfolio && form.portfolio instanceof File) {
+        formData.append("portfolio", form.portfolio);
+      }
+      formData.append("profileId", profileId);
+      formData.append("internshipId", internshipId);
+
+      // Here you would make actual API call
+      const { status, message } = await applyForInternship(formData);
+
+      if (status === "error" && message === "jwt expired") {
+        localStorage.setItem("applyFormBackup", JSON.stringify(form));
+        await dispatch(logoutAction(authId));
+      }
+      localStorage.removeItem("applyFormBackup");
+
+      setSubmitSuccess(true);
+      setSubmitMessage("Application submitted successfully!");
+    } catch (error) {
+      setErrors({ submit: error.message || "Failed to submit application" });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  useEffect(() => {
+    const saved = localStorage.getItem("applyFormBackup");
+    if (saved) {
+      setForm(JSON.parse(saved));
+    }
+  }, []);
+
+  const handleNext = () => {
+    console.log(currentStep);
+    const stepErrors = validateStep(currentStep);
+    if (Object.keys(stepErrors).length > 0) {
+      setErrors(stepErrors);
+      return;
+    }
+    setCurrentStep((prev) => Math.min(prev + 1, 4));
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleBack = () => {
     setCurrentStep((prev) => Math.max(prev - 1, 1));
     window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  const handleSubmit = async () => {
-    if (!validateStep(4)) return;
-
-    setIsSubmitting(true);
-
-    try {
-      // Prepare application data
-      const applicationData = {
-        ...formData,
-        internshipId,
-        internshipTitle: internship?.title,
-        companyName: internship?.company,
-      };
-
-      // Here you would typically send the data to your backend
-      console.log("Submitting application:", applicationData);
-
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-
-      alert(
-        `Application submitted successfully for ${
-          internship?.title || "the internship"
-        }!`
-      );
-
-      setFormData({
-        email: "",
-        countryCode: "+91",
-        mobile: "",
-        firstName: "",
-        lastName: "",
-        gender: "",
-        dateOfBirth: "",
-        address: "",
-        city: "",
-        state: "",
-        pincode: "",
-        educationLevel: "",
-        institutionName: "",
-        degree: "",
-        fieldOfStudy: "",
-        graduationYear: "",
-        cgpa: "",
-        skills: "",
-        linkedinUrl: "",
-        portfolioUrl: "",
-        githubUrl: "",
-        startDate: "",
-        duration: "",
-        expectedStipend: "",
-        workMode: "",
-        coverLetter: "",
-        whyThisInternship: "",
-        resume: null,
-        portfolio: null,
-        agreeTerms: false,
-      });
-      setCurrentStep(1);
-    } catch (error) {
-      console.error("Submission error:", error);
-      setErrors({ submit: "Failed to submit application. Please try again." });
-    } finally {
-      setIsSubmitting(false);
-    }
   };
 
   // Show loading while checking authentication
@@ -350,679 +357,648 @@ const ApplicationFormPage = () => {
           <ProgressBar currentStep={currentStep} totalSteps={4} />
         </CardHeader>
 
-        <CardContent className="space-y-6 pb-6 md:pb-8 px-4 md:px-6">
-          {errors.submit && (
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{errors.submit}</AlertDescription>
-            </Alert>
-          )}
+        <form onSubmit={handleSubmit}>
+          <CardContent className="space-y-6 pb-6 md:pb-8 px-4 md:px-6">
+            {errors?.submit && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{errors.submit}</AlertDescription>
+              </Alert>
+            )}
+            {submitSuccess && (
+              <Alert className="border-green-200 bg-green-50">
+                <Check className="h-4 w-4 text-green-600" />
+                <AlertDescription className="text-green-800">
+                  {submitMessage || "Application submitted successfully!"}
+                </AlertDescription>
+              </Alert>
+            )}
 
-          {currentStep === 1 && (
-            <div className="space-y-4 md:space-y-6">
-              <h3 className="text-lg font-semibold text-slate-800">
-                Personal Details
-              </h3>
+            {currentStep === 1 && (
+              <div className="space-y-4 md:space-y-6">
+                <h3 className="text-lg font-semibold text-slate-800">
+                  Personal Details
+                </h3>
 
-              <div className="grid md:grid-cols-2 gap-4">
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="firstName">
+                      First Name<span className="text-red-500 ml-1">*</span>
+                    </Label>
+                    <Input
+                      id="firstName"
+                      name="firstName"
+                      placeholder="Satish"
+                      value={form?.firstName}
+                      onChange={handleInputChange}
+                      className={errors?.firstName ? "border-red-500" : ""}
+                    />
+                    {errors?.firstName && (
+                      <p className="text-xs text-red-600">{errors.firstName}</p>
+                    )}
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="lastName">Last Name</Label>
+                    <Input
+                      id="lastName"
+                      name="lastName"
+                      placeholder="Subedi"
+                      value={form?.lastName}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                </div>
+
                 <div className="grid gap-2">
-                  <Label htmlFor="firstName">
-                    First Name<span className="text-red-500 ml-1">*</span>
+                  <Label htmlFor="email">
+                    Email<span className="text-red-500 ml-1">*</span>
                   </Label>
                   <Input
-                    id="firstName"
-                    name="firstName"
-                    value={formData.firstName}
+                    id="email"
+                    name="email"
+                    type="email"
+                    placeholder="satish236@gmail.com"
+                    value={form?.email}
                     onChange={handleInputChange}
-                    placeholder="Satish"
-                    className={errors.firstName ? "border-red-500" : ""}
+                    className={errors?.email ? "border-red-500" : ""}
                   />
-                  {errors.firstName && (
-                    <p className="text-xs text-red-600">{errors.firstName}</p>
+                  {errors?.email && (
+                    <p className="text-xs text-red-600">{errors.email}</p>
                   )}
                 </div>
 
                 <div className="grid gap-2">
-                  <Label htmlFor="lastName">Last Name</Label>
-                  <Input
-                    id="lastName"
-                    name="lastName"
-                    value={formData.lastName}
-                    onChange={handleInputChange}
-                    placeholder="Subedi"
-                  />
+                  <Label htmlFor="mobile">
+                    Mobile<span className="text-red-500 ml-1">*</span>
+                  </Label>
+                  <div className="flex gap-2">
+                    <select
+                      name="countryCode"
+                      value={form?.countryCode}
+                      onChange={handleInputChange}
+                      className="w-24 h-10 px-3 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                    >
+                      <option value="+91">+91</option>
+                      <option value="+1">+1</option>
+                      <option value="+44">+44</option>
+                    </select>
+                    <Input
+                      id="mobile"
+                      name="mobile"
+                      type="tel"
+                      placeholder="9846079038"
+                      value={form?.mobile}
+                      onChange={handleInputChange}
+                      className={`flex-1 ${
+                        errors?.mobile ? "border-red-500" : ""
+                      }`}
+                    />
+                  </div>
+                  {errors?.mobile && (
+                    <p className="text-xs text-red-600">{errors.mobile}</p>
+                  )}
                 </div>
-              </div>
 
-              <div className="grid gap-2">
-                <Label htmlFor="email">
-                  Email<span className="text-red-500 ml-1">*</span>
-                </Label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  placeholder="satish236@gmail.com"
-                  className={errors.email ? "border-red-500" : ""}
-                />
-                {errors.email && (
-                  <p className="text-xs text-red-600">{errors.email}</p>
-                )}
-              </div>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="gender">
+                      Gender<span className="text-red-500 ml-1">*</span>
+                    </Label>
+                    <select
+                      id="gender"
+                      name="gender"
+                      value={form?.gender}
+                      onChange={handleInputChange}
+                      className={`w-full h-10 px-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white ${
+                        errors?.gender ? "border-red-500" : "border-slate-300"
+                      }`}
+                    >
+                      <option value="">Select gender</option>
+                      <option value="male">Male</option>
+                      <option value="female">Female</option>
+                      <option value="non-binary">Non-binary</option>
+                      <option value="prefer-not">Prefer not to say</option>
+                    </select>
+                    {errors?.gender && (
+                      <p className="text-xs text-red-600">{errors.gender}</p>
+                    )}
+                  </div>
 
-              <div className="grid gap-2">
-                <Label htmlFor="mobile">
-                  Mobile<span className="text-red-500 ml-1">*</span>
-                </Label>
-                <div className="flex gap-2">
-                  <select
-                    name="countryCode"
-                    value={formData.countryCode}
-                    onChange={handleInputChange}
-                    className="w-24 h-10 px-3 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-                  >
-                    <option value="+91">+91</option>
-                    <option value="+1">+1</option>
-                    <option value="+44">+44</option>
-                  </select>
-                  <Input
-                    id="mobile"
-                    name="mobile"
-                    type="tel"
-                    value={formData.mobile}
-                    onChange={handleInputChange}
-                    placeholder="9846079038"
-                    className={`flex-1 ${
-                      errors.mobile ? "border-red-500" : ""
-                    }`}
-                  />
+                  <div className="grid gap-2">
+                    <Label htmlFor="dateOfBirth">
+                      Date of Birth<span className="text-red-500 ml-1">*</span>
+                    </Label>
+                    <Input
+                      id="dateOfBirth"
+                      name="dateOfBirth"
+                      type="date"
+                      value={form?.dateOfBirth}
+                      onChange={handleInputChange}
+                      className={errors?.dateOfBirth ? "border-red-500" : ""}
+                    />
+                    {errors?.dateOfBirth && (
+                      <p className="text-xs text-red-600">
+                        {errors.dateOfBirth}
+                      </p>
+                    )}
+                  </div>
                 </div>
-                {errors.mobile && (
-                  <p className="text-xs text-red-600">{errors.mobile}</p>
-                )}
-              </div>
 
-              <div className="grid md:grid-cols-2 gap-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="gender">
-                    Gender<span className="text-red-500 ml-1">*</span>
+                  <Label htmlFor="address">Address</Label>
+                  <Input
+                    id="address"
+                    name="address"
+                    placeholder="Street address"
+                    value={form?.address}
+                    onChange={handleInputChange}
+                  />
+                </div>
+
+                <div className="grid md:grid-cols-3 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="city">
+                      City<span className="text-red-500 ml-1">*</span>
+                    </Label>
+                    <Input
+                      id="city"
+                      name="city"
+                      placeholder="Delhi"
+                      value={form?.city}
+                      onChange={handleInputChange}
+                      className={errors?.city ? "border-red-500" : ""}
+                    />
+                    {errors?.city && (
+                      <p className="text-xs text-red-600">{errors.city}</p>
+                    )}
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="state">State</Label>
+                    <Input
+                      id="state"
+                      name="state"
+                      placeholder="Delhi"
+                      value={form?.state}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="pincode">Pincode</Label>
+                    <Input
+                      id="pincode"
+                      name="pincode"
+                      placeholder="110001"
+                      value={form?.pincode}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {currentStep === 2 && (
+              <div className="space-y-4 md:space-y-6">
+                <h3 className="text-lg font-semibold text-slate-800">
+                  Education & Skills
+                </h3>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="educationLevel">
+                    Education Level<span className="text-red-500 ml-1">*</span>
                   </Label>
                   <select
-                    id="gender"
-                    name="gender"
-                    value={formData.gender}
+                    id="educationLevel"
+                    name="educationLevel"
+                    value={form?.educationLevel}
                     onChange={handleInputChange}
                     className={`w-full h-10 px-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white ${
-                      errors.gender ? "border-red-500" : "border-slate-300"
+                      errors?.educationLevel
+                        ? "border-red-500"
+                        : "border-slate-300"
                     }`}
                   >
-                    <option value="">Select gender</option>
-                    <option value="male">Male</option>
-                    <option value="female">Female</option>
-                    <option value="non-binary">Non-binary</option>
-                    <option value="prefer-not">Prefer not to say</option>
+                    <option value="">Select education level</option>
+                    <option value="high-school">High School</option>
+                    <option value="diploma">Diploma</option>
+                    <option value="bachelors">Bachelor Degree</option>
+                    <option value="masters">Master Degree</option>
+                    <option value="phd">PhD</option>
                   </select>
-                  {errors.gender && (
-                    <p className="text-xs text-red-600">{errors.gender}</p>
+                  {errors?.educationLevel && (
+                    <p className="text-xs text-red-600">
+                      {errors.educationLevel}
+                    </p>
                   )}
                 </div>
 
                 <div className="grid gap-2">
-                  <Label htmlFor="dateOfBirth">
-                    Date of Birth<span className="text-red-500 ml-1">*</span>
+                  <Label htmlFor="institutionName">
+                    Institution Name<span className="text-red-500 ml-1">*</span>
                   </Label>
                   <Input
-                    id="dateOfBirth"
-                    name="dateOfBirth"
-                    type="date"
-                    value={formData.dateOfBirth}
+                    id="institutionName"
+                    name="institutionName"
+                    placeholder="Delhi University"
+                    value={form?.institutionName}
                     onChange={handleInputChange}
-                    className={errors.dateOfBirth ? "border-red-500" : ""}
+                    className={errors?.institutionName ? "border-red-500" : ""}
                   />
-                  {errors.dateOfBirth && (
-                    <p className="text-xs text-red-600">{errors.dateOfBirth}</p>
+                  {errors?.institutionName && (
+                    <p className="text-xs text-red-600">
+                      {errors.institutionName}
+                    </p>
                   )}
                 </div>
-              </div>
 
-              <div className="grid gap-2">
-                <Label htmlFor="address">Address</Label>
-                <Input
-                  id="address"
-                  name="address"
-                  value={formData.address}
-                  onChange={handleInputChange}
-                  placeholder="Street address"
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="degree">
+                      Degree<span className="text-red-500 ml-1">*</span>
+                    </Label>
+                    <Input
+                      id="degree"
+                      name="degree"
+                      placeholder="B.Tech, BCA, etc."
+                      value={form?.degree}
+                      onChange={handleInputChange}
+                      className={errors?.degree ? "border-red-500" : ""}
+                    />
+                    {errors?.degree && (
+                      <p className="text-xs text-red-600">{errors.degree}</p>
+                    )}
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="fieldOfStudy">
+                      Field of Study<span className="text-red-500 ml-1">*</span>
+                    </Label>
+                    <Input
+                      id="fieldOfStudy"
+                      name="fieldOfStudy"
+                      placeholder="Computer Science"
+                      value={form?.fieldOfStudy}
+                      onChange={handleInputChange}
+                      className={errors?.fieldOfStudy ? "border-red-500" : ""}
+                    />
+                    {errors?.fieldOfStudy && (
+                      <p className="text-xs text-red-600">
+                        {errors.fieldOfStudy}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="graduationYear">
+                      Graduation Year
+                      <span className="text-red-500 ml-1">*</span>
+                    </Label>
+                    <Input
+                      id="graduationYear"
+                      name="graduationYear"
+                      type="number"
+                      placeholder="2025"
+                      min="2000"
+                      max="2030"
+                      value={form?.graduationYear}
+                      onChange={handleInputChange}
+                      className={errors?.graduationYear ? "border-red-500" : ""}
+                    />
+                    {errors?.graduationYear && (
+                      <p className="text-xs text-red-600">
+                        {errors.graduationYear}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="cgpa">CGPA / Percentage</Label>
+                    <Input
+                      id="cgpa"
+                      name="cgpa"
+                      placeholder="8.5 or 85%"
+                      value={form?.cgpa}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="skills">
+                    Skills<span className="text-red-500 ml-1">*</span>
+                  </Label>
+                  <textarea
+                    id="skills"
+                    name="skills"
+                    placeholder="E.g., Photoshop, Illustrator, Figma, UI/UX Design"
+                    rows={3}
+                    value={form?.skills}
+                    onChange={handleInputChange}
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                      errors?.skills ? "border-red-500" : "border-slate-300"
+                    }`}
+                  />
+                  {errors?.skills && (
+                    <p className="text-xs text-red-600">{errors.skills}</p>
+                  )}
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="linkedinUrl">LinkedIn URL</Label>
+                  <Input
+                    id="linkedinUrl"
+                    name="linkedinUrl"
+                    type="url"
+                    placeholder="https://linkedin.com/in/yourprofile"
+                    value={form?.linkedinUrl}
+                    onChange={handleInputChange}
+                  />
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="portfolioUrl">Portfolio URL</Label>
+                    <Input
+                      id="portfolioUrl"
+                      name="portfolioUrl"
+                      type="url"
+                      placeholder="https://yourportfolio.com"
+                      value={form?.portfolioUrl}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="githubUrl">GitHub URL</Label>
+                    <Input
+                      id="githubUrl"
+                      name="githubUrl"
+                      type="url"
+                      placeholder="https://github.com/yourusername"
+                      value={form?.githubUrl}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {currentStep === 3 && (
+              <div className="space-y-4 md:space-y-6">
+                <h3 className="text-lg font-semibold text-slate-800">
+                  Additional Information
+                </h3>
+
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="startDate">
+                      Available Start Date
+                      <span className="text-red-500 ml-1">*</span>
+                    </Label>
+                    <Input
+                      id="startDate"
+                      name="startDate"
+                      type="date"
+                      value={form?.startDate}
+                      onChange={handleInputChange}
+                      className={errors?.startDate ? "border-red-500" : ""}
+                    />
+                    {errors?.startDate && (
+                      <p className="text-xs text-red-600">{errors.startDate}</p>
+                    )}
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="duration">
+                      Preferred Duration
+                      <span className="text-red-500 ml-1">*</span>
+                    </Label>
+                    <select
+                      id="duration"
+                      name="duration"
+                      value={form?.duration}
+                      onChange={handleInputChange}
+                      className={`w-full h-10 px-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white ${
+                        errors?.duration ? "border-red-500" : "border-slate-300"
+                      }`}
+                    >
+                      <option value="">Select duration</option>
+                      <option value="1-month">1 Month</option>
+                      <option value="2-months">2 Months</option>
+                      <option value="3-months">3 Months</option>
+                      <option value="6-months">6 Months</option>
+                      <option value="flexible">Flexible</option>
+                    </select>
+                    {errors?.duration && (
+                      <p className="text-xs text-red-600">{errors.duration}</p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="expectedStipend">
+                      Expected Stipend (Monthly)
+                    </Label>
+                    <Input
+                      id="expectedStipend"
+                      name="expectedStipend"
+                      placeholder="10000 or Unpaid"
+                      value={form?.expectedStipend}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="workMode">
+                      Work Mode<span className="text-red-500 ml-1">*</span>
+                    </Label>
+                    <select
+                      id="workMode"
+                      name="workMode"
+                      value={form?.workMode}
+                      onChange={handleInputChange}
+                      className={`w-full h-10 px-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white ${
+                        errors?.workMode ? "border-red-500" : "border-slate-300"
+                      }`}
+                    >
+                      <option value="">Select work mode</option>
+                      <option value="remote">Remote</option>
+                      <option value="office">Office</option>
+                      <option value="hybrid">Hybrid</option>
+                    </select>
+                    {errors?.workMode && (
+                      <p className="text-xs text-red-600">{errors.workMode}</p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="whyThisInternship">
+                    Why do you want this internship?
+                    <span className="text-red-500 ml-1">*</span>
+                  </Label>
+                  <textarea
+                    id="whyThisInternship"
+                    name="whyThisInternship"
+                    placeholder="Tell us why you are interested in this internship..."
+                    rows={5}
+                    value={form?.whyThisInternship}
+                    onChange={handleInputChange}
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                      errors?.whyThisInternship
+                        ? "border-red-500"
+                        : "border-slate-300"
+                    }`}
+                  />
+                  <p className="text-xs text-slate-500">
+                    Minimum 50 characters required
+                  </p>
+                  {errors?.whyThisInternship && (
+                    <p className="text-xs text-red-600">
+                      {errors.whyThisInternship}
+                    </p>
+                  )}
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="coverLetter">Cover Letter (Optional)</Label>
+                  <textarea
+                    id="coverLetter"
+                    name="coverLetter"
+                    placeholder="Additional information you would like to share..."
+                    rows={4}
+                    value={form?.coverLetter || ""}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                <FileUpload
+                  label="Resume"
+                  name="resume"
+                  accept=".pdf,.doc,.docx"
+                  required={true}
+                  error={errors?.resume}
+                  onChange={handleFileChange}
+                />
+
+                <FileUpload
+                  label="Portfolio (Optional)"
+                  name="portfolio"
+                  accept=".pdf,.zip"
+                  required={false}
+                  error={errors?.portfolio}
+                  onChange={handleFileChange}
                 />
               </div>
+            )}
 
-              <div className="grid md:grid-cols-3 gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="city">
-                    City<span className="text-red-500 ml-1">*</span>
+            {currentStep === 4 && (
+              <div className="space-y-6">
+                <h3 className="text-lg font-semibold text-slate-800">
+                  Review Your Application
+                </h3>
+
+                <div className="bg-blue-50 p-6 rounded-lg text-center">
+                  <h4 className="font-semibold text-blue-900 mb-2">
+                    Please Review Your Information
+                  </h4>
+                  <p className="text-blue-800 text-sm leading-relaxed">
+                    Please review all the information you entered in the
+                    previous steps. Make sure all details are accurate before
+                    submitting your application.
+                  </p>
+                </div>
+
+                <div className="bg-amber-50 p-4 rounded-lg">
+                  <h4 className="font-semibold text-amber-900 mb-2">
+                    Important Notes:
+                  </h4>
+                  <ul className="text-amber-800 text-sm space-y-1">
+                    <li>
+                      • Ensure your resume is up-to-date and relevant to this
+                      internship
+                    </li>
+                    <li>• Double-check your contact information</li>
+                    <li>• Verify your availability dates</li>
+                    <li>
+                      • Make sure your motivation statement is specific to this
+                      role
+                    </li>
+                  </ul>
+                </div>
+                <ReviewSummary form={form}></ReviewSummary>
+
+                <div className="flex items-start gap-2 p-4 bg-slate-50 rounded-lg border-2 border-slate-200">
+                  <input
+                    type="checkbox"
+                    id="agreeTerms"
+                    name="agreeTerms"
+                    checked={form?.agreeTerms || false}
+                    onChange={handleInputChange}
+                    required
+                    className="mt-1"
+                  />
+                  <Label
+                    htmlFor="agreeTerms"
+                    className="text-sm cursor-pointer"
+                  >
+                    I agree to the terms and conditions and confirm that all
+                    information provided is accurate and truthful.
+                    <span className="text-red-500 ml-1">*</span>
                   </Label>
-                  <Input
-                    id="city"
-                    name="city"
-                    value={formData.city}
-                    onChange={handleInputChange}
-                    placeholder="Delhi"
-                    className={errors.city ? "border-red-500" : ""}
-                  />
-                  {errors.city && (
-                    <p className="text-xs text-red-600">{errors.city}</p>
-                  )}
                 </div>
-
-                <div className="grid gap-2">
-                  <Label htmlFor="state">State</Label>
-                  <Input
-                    id="state"
-                    name="state"
-                    value={formData.state}
-                    onChange={handleInputChange}
-                    placeholder="Delhi"
-                  />
-                </div>
-
-                <div className="grid gap-2">
-                  <Label htmlFor="pincode">Pincode</Label>
-                  <Input
-                    id="pincode"
-                    name="pincode"
-                    value={formData.pincode}
-                    onChange={handleInputChange}
-                    placeholder="110001"
-                  />
-                </div>
+                {errors?.agreeTerms && (
+                  <p className="text-xs text-red-600">{errors.agreeTerms}</p>
+                )}
               </div>
-            </div>
-          )}
+            )}
 
-          {currentStep === 2 && (
-            <div className="space-y-4 md:space-y-6">
-              <h3 className="text-lg font-semibold text-slate-800">
-                Education & Skills
-              </h3>
-
-              <div className="grid gap-2">
-                <Label htmlFor="educationLevel">
-                  Education Level<span className="text-red-500 ml-1">*</span>
-                </Label>
-                <select
-                  id="educationLevel"
-                  name="educationLevel"
-                  value={formData.educationLevel}
-                  onChange={handleInputChange}
-                  className={`w-full h-10 px-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white ${
-                    errors.educationLevel
-                      ? "border-red-500"
-                      : "border-slate-300"
-                  }`}
+            <div className="flex justify-between pt-6 border-t">
+              {currentStep > 1 && (
+                <Button
+                  onClick={handleBack}
+                  variant="outline"
+                  className="flex items-center gap-2"
                 >
-                  <option value="">Select education level</option>
-                  <option value="high-school">High School</option>
-                  <option value="diploma">Diploma</option>
-                  <option value="bachelors">Bachelor Degree</option>
-                  <option value="masters">Master Degree</option>
-                  <option value="phd">PhD</option>
-                </select>
-                {errors.educationLevel && (
-                  <p className="text-xs text-red-600">
-                    {errors.educationLevel}
-                  </p>
-                )}
-              </div>
+                  <ChevronLeft className="w-4 h-4" />
+                  Back
+                </Button>
+              )}
 
-              <div className="grid gap-2">
-                <Label htmlFor="institutionName">
-                  Institution Name<span className="text-red-500 ml-1">*</span>
-                </Label>
-                <Input
-                  id="institutionName"
-                  name="institutionName"
-                  value={formData.institutionName}
-                  onChange={handleInputChange}
-                  placeholder="Delhi University"
-                  className={errors.institutionName ? "border-red-500" : ""}
-                />
-                {errors.institutionName && (
-                  <p className="text-xs text-red-600">
-                    {errors.institutionName}
-                  </p>
-                )}
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="degree">
-                    Degree<span className="text-red-500 ml-1">*</span>
-                  </Label>
-                  <Input
-                    id="degree"
-                    name="degree"
-                    value={formData.degree}
-                    onChange={handleInputChange}
-                    placeholder="B.Tech, BCA, etc."
-                    className={errors.degree ? "border-red-500" : ""}
-                  />
-                  {errors.degree && (
-                    <p className="text-xs text-red-600">{errors.degree}</p>
+              {currentStep < 4 ? (
+                <Button
+                  type="button"
+                  onClick={handleNext}
+                  className="ml-auto flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
+                >
+                  Next
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+              ) : (
+                <Button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="ml-auto flex items-center gap-2 bg-green-600 hover:bg-green-700"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Submitting...
+                    </>
+                  ) : (
+                    "Submit Application"
                   )}
-                </div>
-
-                <div className="grid gap-2">
-                  <Label htmlFor="fieldOfStudy">
-                    Field of Study<span className="text-red-500 ml-1">*</span>
-                  </Label>
-                  <Input
-                    id="fieldOfStudy"
-                    name="fieldOfStudy"
-                    value={formData.fieldOfStudy}
-                    onChange={handleInputChange}
-                    placeholder="Computer Science"
-                    className={errors.fieldOfStudy ? "border-red-500" : ""}
-                  />
-                  {errors.fieldOfStudy && (
-                    <p className="text-xs text-red-600">
-                      {errors.fieldOfStudy}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="graduationYear">
-                    Graduation Year<span className="text-red-500 ml-1">*</span>
-                  </Label>
-                  <Input
-                    id="graduationYear"
-                    name="graduationYear"
-                    type="number"
-                    value={formData.graduationYear}
-                    onChange={handleInputChange}
-                    placeholder="2025"
-                    min="2000"
-                    max="2030"
-                    className={errors.graduationYear ? "border-red-500" : ""}
-                  />
-                  {errors.graduationYear && (
-                    <p className="text-xs text-red-600">
-                      {errors.graduationYear}
-                    </p>
-                  )}
-                </div>
-
-                <div className="grid gap-2">
-                  <Label htmlFor="cgpa">CGPA / Percentage</Label>
-                  <Input
-                    id="cgpa"
-                    name="cgpa"
-                    value={formData.cgpa}
-                    onChange={handleInputChange}
-                    placeholder="8.5 or 85%"
-                  />
-                </div>
-              </div>
-
-              <div className="grid gap-2">
-                <Label htmlFor="skills">
-                  Skills<span className="text-red-500 ml-1">*</span>
-                </Label>
-                <textarea
-                  id="skills"
-                  name="skills"
-                  value={formData.skills}
-                  onChange={handleInputChange}
-                  placeholder="E.g., Photoshop, Illustrator, Figma, UI/UX Design"
-                  rows={3}
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    errors.skills ? "border-red-500" : "border-slate-300"
-                  }`}
-                />
-                {errors.skills && (
-                  <p className="text-xs text-red-600">{errors.skills}</p>
-                )}
-              </div>
-
-              <div className="grid gap-2">
-                <Label htmlFor="linkedinUrl">LinkedIn URL</Label>
-                <Input
-                  id="linkedinUrl"
-                  name="linkedinUrl"
-                  type="url"
-                  value={formData.linkedinUrl}
-                  onChange={handleInputChange}
-                  placeholder="https://linkedin.com/in/yourprofile"
-                />
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="portfolioUrl">Portfolio URL</Label>
-                  <Input
-                    id="portfolioUrl"
-                    name="portfolioUrl"
-                    type="url"
-                    value={formData.portfolioUrl}
-                    onChange={handleInputChange}
-                    placeholder="https://yourportfolio.com"
-                  />
-                </div>
-
-                <div className="grid gap-2">
-                  <Label htmlFor="githubUrl">GitHub URL</Label>
-                  <Input
-                    id="githubUrl"
-                    name="githubUrl"
-                    type="url"
-                    value={formData.githubUrl}
-                    onChange={handleInputChange}
-                    placeholder="https://github.com/yourusername"
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {currentStep === 3 && (
-            <div className="space-y-4 md:space-y-6">
-              <h3 className="text-lg font-semibold text-slate-800">
-                Additional Information
-              </h3>
-
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="startDate">
-                    Available Start Date
-                    <span className="text-red-500 ml-1">*</span>
-                  </Label>
-                  <Input
-                    id="startDate"
-                    name="startDate"
-                    type="date"
-                    value={formData.startDate}
-                    onChange={handleInputChange}
-                    className={errors.startDate ? "border-red-500" : ""}
-                  />
-                  {errors.startDate && (
-                    <p className="text-xs text-red-600">{errors.startDate}</p>
-                  )}
-                </div>
-
-                <div className="grid gap-2">
-                  <Label htmlFor="duration">
-                    Preferred Duration
-                    <span className="text-red-500 ml-1">*</span>
-                  </Label>
-                  <select
-                    id="duration"
-                    name="duration"
-                    value={formData.duration}
-                    onChange={handleInputChange}
-                    className={`w-full h-10 px-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white ${
-                      errors.duration ? "border-red-500" : "border-slate-300"
-                    }`}
-                  >
-                    <option value="">Select duration</option>
-                    <option value="1-month">1 Month</option>
-                    <option value="2-months">2 Months</option>
-                    <option value="3-months">3 Months</option>
-                    <option value="6-months">6 Months</option>
-                    <option value="flexible">Flexible</option>
-                  </select>
-                  {errors.duration && (
-                    <p className="text-xs text-red-600">{errors.duration}</p>
-                  )}
-                </div>
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="expectedStipend">
-                    Expected Stipend (Monthly)
-                  </Label>
-                  <Input
-                    id="expectedStipend"
-                    name="expectedStipend"
-                    value={formData.expectedStipend}
-                    onChange={handleInputChange}
-                    placeholder="10000 or Unpaid"
-                  />
-                </div>
-
-                <div className="grid gap-2">
-                  <Label htmlFor="workMode">
-                    Work Mode<span className="text-red-500 ml-1">*</span>
-                  </Label>
-                  <select
-                    id="workMode"
-                    name="workMode"
-                    value={formData.workMode}
-                    onChange={handleInputChange}
-                    className={`w-full h-10 px-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white ${
-                      errors.workMode ? "border-red-500" : "border-slate-300"
-                    }`}
-                  >
-                    <option value="">Select work mode</option>
-                    <option value="remote">Remote</option>
-                    <option value="office">Office</option>
-                    <option value="hybrid">Hybrid</option>
-                  </select>
-                  {errors.workMode && (
-                    <p className="text-xs text-red-600">{errors.workMode}</p>
-                  )}
-                </div>
-              </div>
-
-              <div className="grid gap-2">
-                <Label htmlFor="whyThisInternship">
-                  Why do you want this internship?
-                  <span className="text-red-500 ml-1">*</span>
-                </Label>
-                <textarea
-                  id="whyThisInternship"
-                  name="whyThisInternship"
-                  value={formData.whyThisInternship}
-                  onChange={handleInputChange}
-                  placeholder="Tell us why you are interested in this internship..."
-                  rows={5}
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    errors.whyThisInternship
-                      ? "border-red-500"
-                      : "border-slate-300"
-                  }`}
-                />
-                <p className="text-xs text-slate-500">
-                  {formData.whyThisInternship.length} / 50 characters minimum
-                </p>
-                {errors.whyThisInternship && (
-                  <p className="text-xs text-red-600">
-                    {errors.whyThisInternship}
-                  </p>
-                )}
-              </div>
-
-              <div className="grid gap-2">
-                <Label htmlFor="coverLetter">Cover Letter (Optional)</Label>
-                <textarea
-                  id="coverLetter"
-                  name="coverLetter"
-                  value={formData.coverLetter}
-                  onChange={handleInputChange}
-                  placeholder="Additional information you would like to share..."
-                  rows={4}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <FileUpload
-                label="Resume"
-                name="resume"
-                accept=".pdf,.doc,.docx"
-                required={true}
-                file={formData.resume}
-                setFile={(file) =>
-                  setFormData((prev) => ({ ...prev, resume: file }))
-                }
-                error={errors.resume}
-              />
-
-              <FileUpload
-                label="Portfolio (Optional)"
-                name="portfolio"
-                accept=".pdf,.zip"
-                required={false}
-                file={formData.portfolio}
-                setFile={(file) =>
-                  setFormData((prev) => ({ ...prev, portfolio: file }))
-                }
-              />
-            </div>
-          )}
-
-          {currentStep === 4 && (
-            <div className="space-y-6">
-              <h3 className="text-lg font-semibold text-slate-800">
-                Review Your Application
-              </h3>
-
-              <div className="space-y-4 bg-slate-50 p-4 rounded-lg">
-                <div className="border-b pb-3">
-                  <h4 className="font-semibold text-slate-700 mb-2">
-                    Personal Information
-                  </h4>
-                  <div className="grid md:grid-cols-2 gap-2 text-sm">
-                    <p>
-                      <span className="text-slate-600">Name:</span>{" "}
-                      {formData.firstName} {formData.lastName}
-                    </p>
-                    <p>
-                      <span className="text-slate-600">Email:</span>{" "}
-                      {formData.email}
-                    </p>
-                    <p>
-                      <span className="text-slate-600">Mobile:</span>{" "}
-                      {formData.countryCode} {formData.mobile}
-                    </p>
-                    <p>
-                      <span className="text-slate-600">City:</span>{" "}
-                      {formData.city}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="border-b pb-3">
-                  <h4 className="font-semibold text-slate-700 mb-2">
-                    Education
-                  </h4>
-                  <div className="grid md:grid-cols-2 gap-2 text-sm">
-                    <p>
-                      <span className="text-slate-600">Institution:</span>{" "}
-                      {formData.institutionName}
-                    </p>
-                    <p>
-                      <span className="text-slate-600">Degree:</span>{" "}
-                      {formData.degree}
-                    </p>
-                    <p>
-                      <span className="text-slate-600">Field:</span>{" "}
-                      {formData.fieldOfStudy}
-                    </p>
-                    <p>
-                      <span className="text-slate-600">Year:</span>{" "}
-                      {formData.graduationYear}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="border-b pb-3">
-                  <h4 className="font-semibold text-slate-700 mb-2">
-                    Internship Details
-                  </h4>
-                  <div className="grid md:grid-cols-2 gap-2 text-sm">
-                    <p>
-                      <span className="text-slate-600">Start Date:</span>{" "}
-                      {formData.startDate}
-                    </p>
-                    <p>
-                      <span className="text-slate-600">Duration:</span>{" "}
-                      {formData.duration}
-                    </p>
-                    <p>
-                      <span className="text-slate-600">Work Mode:</span>{" "}
-                      {formData.workMode}
-                    </p>
-                    <p>
-                      <span className="text-slate-600">Resume:</span>{" "}
-                      {formData.resume ? formData.resume.name : "Not uploaded"}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-2 p-4 bg-blue-50 rounded-lg">
-                <input
-                  type="checkbox"
-                  id="agreeTerms"
-                  name="agreeTerms"
-                  checked={formData.agreeTerms}
-                  onChange={handleInputChange}
-                  className="mt-1"
-                />
-                <Label htmlFor="agreeTerms" className="text-sm cursor-pointer">
-                  I agree to the terms and conditions and confirm that all
-                  information provided is accurate.
-                  <span className="text-red-500 ml-1">*</span>
-                </Label>
-              </div>
-              {errors.agreeTerms && (
-                <p className="text-xs text-red-600">{errors.agreeTerms}</p>
+                </Button>
               )}
             </div>
-          )}
-
-          <div className="flex justify-between pt-6 border-t">
-            {currentStep > 1 && (
-              <Button
-                onClick={handleBack}
-                variant="outline"
-                className="flex items-center gap-2"
-              >
-                <ChevronLeft className="w-4 h-4" />
-                Back
-              </Button>
-            )}
-
-            {currentStep < 4 ? (
-              <Button
-                onClick={handleNext}
-                className="ml-auto flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
-              >
-                Next
-                <ChevronRight className="w-4 h-4" />
-              </Button>
-            ) : (
-              <Button
-                onClick={handleSubmit}
-                disabled={isSubmitting}
-                className="ml-auto flex items-center gap-2 bg-green-600 hover:bg-green-700"
-              >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Submitting...
-                  </>
-                ) : (
-                  "Submit Application"
-                )}
-              </Button>
-            )}
-          </div>
-        </CardContent>
+          </CardContent>
+        </form>
       </Card>
     </div>
   );

@@ -26,7 +26,10 @@ const AppRoutes = () => {
           path="internships"
           element={<InternshipList></InternshipList>}
         ></Route>
-        <Route path="internship" element={<Intership></Intership>}></Route>
+        <Route
+          path="internship/:internshipId"
+          element={<Intership></Intership>}
+        ></Route>
         <Route
           path="apply/:internshipId"
           element={
