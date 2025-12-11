@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 import Submit from "../../components/CustomComponents/Submit";
-import { useActionState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { Mail, Lock } from "lucide-react";
 import { Link, useNavigate, useSearchParams, useLocation } from "react-router";
 
@@ -26,8 +26,11 @@ import {
 } from "../../firebase/firebase-config.js";
 import { FcGoogle } from "react-icons/fc";
 import { FaFacebook, FaGithub } from "react-icons/fa";
-import { useDispatch } from "react-redux";
-import { loginAction } from "../../features/user/useraction.js";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  autologinAction,
+  loginAction,
+} from "../../features/user/useraction.js";
 
 const Login = () => {
   const dispatch = useDispatch();
@@ -35,7 +38,39 @@ const Login = () => {
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const returnUrl = searchParams.get("returnUrl");
-  console.log(returnUrl);
+  console.log(location);
+  const path = location?.state?.from ?? "/login";
+  const { user, loading } = useSelector((state) => state.userInfo);
+
+  useEffect(() => {
+    const accessToken = localStorage.getItem("accessToken");
+    const refreshToken = localStorage.getItem("refreshToken");
+    // No token → do NOT run autologin
+    if (!accessToken && !refreshToken) {
+      return;
+    }
+    const tryAutoLogin = async () => {
+      if (user?._id) {
+        // already logged in
+        navigate(path);
+        return;
+      }
+
+      // Try auto-login
+      try {
+        const result = await dispatch(autologinAction());
+        console.log(result);
+        if (result?.success) {
+          navigate(path);
+        }
+      } catch (err) {
+        console.error("Auto login or profile fetch failed", err);
+      }
+    };
+
+    tryAutoLogin();
+    // dependencies:
+  }, [user?._id, path, navigate, dispatch]);
 
   const handleOnSubmit = async (prevState, formData) => {
     const email = formData.get("email");
@@ -46,24 +81,27 @@ const Login = () => {
     }
 
     try {
-      const {status} = await dispatch(loginAction({ email, password }));
-      console.log(status);
-      
+      const results = await dispatch(loginAction({ email, password }));
+      console.log(results);
 
-      // Navigate after successful login
-      if (returnUrl) {
-        // If returning to application form, preserve the internship data
-        if (returnUrl.startsWith("/apply/")) {
-          const internship = location.state?.internship;
-          navigate(returnUrl, { state: { internship } });
-        } else {
-          navigate(returnUrl);
-        }
-      } else {
-        navigate("/");
-      }
+      // Navigate after successfulr login
+      // if (returnUrl) {
+      //   // If returning to application form, preserve the internship data
+      //   if (returnUrl.startsWith("/apply/")) {
+      //     const internship = location.state?.internship;
+      //     navigate(returnUrl, { state: { internship } });
+      //   } else {
+      //     navigate(returnUrl);
+      //   }
+      // } else {
+      //   navigate("/");
+      // }
 
-      return { success: true };
+      // return { success: true };
+      // if (status === "success") {
+      // setSkipAutoLoginOnce(true);
+      navigate(path);
+      // }
     } catch (error) {
       console.error("Login dispatch error:", error);
       return { error: error.message || "Login failed" };
@@ -163,6 +201,12 @@ const Login = () => {
             <circle cx="32" cy="32" r="32" fill="white" />
           </svg>
         </div>
+        {/* LOading part */}
+        {loading && (
+          <div style={{ textAlign: "center", padding: "30px" }}>
+            Checking login…
+          </div>
+        )}
 
         {/* Right panel: login form */}
         <div className="flex-1 w-full px-8 py-10 md:py-14">

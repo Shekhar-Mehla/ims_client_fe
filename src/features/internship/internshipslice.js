@@ -10,8 +10,15 @@ const internshipSlice = createSlice({
     setInternships: (state, action) => {
       state.internships = action.payload;
     },
+    setInternshipBySlug: (state, action) => {
+      state.internships = action.payload;
+    },
+    clearInternships: (state) => {
+      state.internships = [];
+    },
   },
 });
 const { reducer, actions } = internshipSlice;
-export const { setInternships } = actions;
+export const { setInternships, setInternshipBySlug, clearInternships } =
+  actions;
 export default reducer;

@@ -3,15 +3,14 @@ import {
   getUserProfile,
   logoutUser,
   changePassword,
+  fetchNewAccessTokenApi,
 } from "./userapi.js";
-import { setUser } from "./userslice.js";
+import { setLoading, setUser } from "./userslice.js";
 export const loginAction = (userData) => {
   return async (dispatch) => {
     try {
-      console.log("Login action called with:", userData);
       const userInfo = await loginUser(userData);
       const { status, payload } = userInfo;
-      console.log("Login response:", status, payload);
 
       if (status === "success") {
         // Store tokens in session and local storage
@@ -24,12 +23,9 @@ export const loginAction = (userData) => {
           // Store refresh token in local storage (long-lived)
           localStorage.setItem("refreshToken", refreshToken);
 
-          console.log("Tokens stored successfully");
-
           // Fetch user profile after successful token storage
           try {
             const profileResponse = await getUserProfile();
-            console.log("Profile response:", profileResponse);
 
             if (profileResponse.status === "success") {
               dispatch(setUser(profileResponse.payload));
@@ -130,6 +126,36 @@ export const logoutAction = (authId) => {
 
       console.log("Local logout completed despite API error");
       return { success: true };
+    }
+  };
+};
+
+export const autologinAction = () => {
+  return async (dispatch) => {
+    dispatch(setLoading(true));
+    try {
+      const accessToken = sessionStorage.getItem("accessToken");
+      console.log(accessToken, " from autologin action");
+      if (accessToken) {
+        dispatch(fetchProfileAction());
+        dispatch(setLoading(false));
+        return { success: true };
+      }
+      const refreshToken = localStorage.getItem("refreshToken");
+      if (refreshToken) {
+        //  call an API to get the access token
+        const { status, payload } = await fetchNewAccessTokenApi();
+        if (status === "success") {
+          const { accessToken } = payload;
+          sessionStorage.setItem("accessToken", accessToken);
+          dispatch(fetchProfileAction());
+          dispatch(setLoading(false));
+          return { success: true };
+        }
+      }
+    } catch (error) {
+      console.error("Auto-login error:", error);
+      throw error;
     }
   };
 };

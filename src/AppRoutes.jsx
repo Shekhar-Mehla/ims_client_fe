@@ -27,17 +27,18 @@ const AppRoutes = () => {
           element={<InternshipList></InternshipList>}
         ></Route>
         <Route
-          path="internship/:internshipId"
+          path="internship/:slug"
           element={<Intership></Intership>}
         ></Route>
         <Route
-          path="apply/:internshipId"
+          path="/internship/:slug/apply"
           element={
             <ProtectedRoute>
               <ApplicationFormPage />
             </ProtectedRoute>
           }
-        ></Route>
+        />
+
         <Route
           path="profile"
           element={
