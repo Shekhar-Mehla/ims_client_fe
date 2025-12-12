@@ -10,19 +10,25 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { MapPin, Star, Calendar, MessageCircle } from "lucide-react";
+import {
+  MapPin,
+  Star,
+  Calendar,
+  MessageCircle,
+  ClockFading,
+} from "lucide-react";
 import { fetchInternshipBySlugActions } from "../../features/internship/internshipaction.js";
 
 const Intership = () => {
   const { slug } = useParams();
-  console.log(slug, " slug from params");
+  
   const navigate = useNavigate();
   const { internships, loading, error } = useSelector(
     (state) => state.internshipInfo
   );
   const dispatch = useDispatch();
   useEffect(() => {
-    dispatch(fetchInternshipBySlugActions(slug));
+   !internships&& dispatch(fetchInternshipBySlugActions(slug));
   }, [dispatch, slug]);
 
   const handleOnApplyNow = () => {
@@ -55,7 +61,7 @@ const Intership = () => {
           <Button className="bg-amber-100 text-black rounded-xl border border-amber-500 px-4 py-2">
             Dates & Duration
           </Button>
-          <Button
+          {/* <Button
             onClick={() => setActiveTab("reviews")}
             className={`${
               activeTab === "reviews"
@@ -68,15 +74,15 @@ const Intership = () => {
           </Button>
           <Button
             onClick={() => setActiveTab("faq")}
-            className={`${
-              activeTab === "faq"
-                ? "bg-amber-500 text-white"
-                : "bg-amber-100 text-black"
-            } rounded-xl border border-amber-500 px-4 py-2 hover:bg-amber-500 hover:text-white transition-colors`}
+            // className={`${
+            //   activeTab === "faq"
+            //     ? "bg-amber-500 text-white"
+            //     : "bg-amber-100 text-black"
+            // } rounded-xl border border-amber-500 px-4 py-2 hover:bg-amber-500 hover:text-white transition-colors`}
           >
             <HelpCircle size={16} className="mr-2" />
             FAQ
-          </Button>
+          </Button> */}
         </div>
 
         {/* DETAILS SECTION */}
@@ -102,21 +108,26 @@ const Intership = () => {
           </CardHeader>
           <CardContent>
             <p className="text-gray-600 flex gap-2 items-center">
-              <Calendar size={18} /> Duration: {duration || "3 Months"}
+              <Calendar size={18} /> Duration:{" "}
+              {internships?.duration || "3 Months"}
             </p>
             <p className="text-gray-600 flex gap-2 items-center">
-              <ClockFading size={18} /> Stipend: {stipend || "₹15,000-30,000"}
+              <ClockFading size={18} /> Stipend:{" "}
+              {internships?.stipend || "₹15,000-30,000"}
             </p>
             <p className="text-gray-600 flex gap-2 items-center">
-              <Star size={18} /> Rating: {rating || 4.7}/5
+              <Star size={18} /> Rating: {internships?.rating || 4.7}/5
             </p>
             <p className="text-gray-600 flex gap-2 items-center">
-              <MessageCircle size={18} /> {reviewCount || 120}+ Reviews
+              <MessageCircle size={18} /> {internships?.reviewCount || 120}+
+              Reviews
             </p>
-            {applicationDeadline && (
+            {internships?.applicationDeadline && (
               <p className="text-red-600 flex gap-2 items-center text-sm mt-2">
                 <Calendar size={16} /> Deadline:{" "}
-                {new Date(applicationDeadline).toLocaleDateString()}
+                {new Date(
+                  internships?.applicationDeadline
+                ).toLocaleDateString()}
               </p>
             )}
           </CardContent>

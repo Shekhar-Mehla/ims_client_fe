@@ -12,7 +12,7 @@ export const fetchInternshipActions = () => {
       console.log("Fetching internships...");
       const internshipInfo = await getAllInternships();
       const { status, payload } = internshipInfo;
-      console.log("Internship fetch result:", status, payload);
+
 
       if (status === "success") {
         dispatch(setInternships(payload));

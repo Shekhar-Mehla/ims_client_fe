@@ -1,6 +1,6 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
+
 import { ChevronsDown, Heart } from "lucide-react";
 import {
   Card,
@@ -17,12 +17,11 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { fetchInternshipActions } from "../../features/internship/internshipaction.js";
-import { useLocation } from "react-router-dom";
 
 const InternshipList = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const location = useLocation();
+
   const { internships, loading, error } = useSelector(
     (state) => state.internshipInfo
   );
@@ -38,8 +37,8 @@ const InternshipList = () => {
   const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
-    dispatch(fetchInternshipActions());
-  }, [dispatch, location.key]);
+    !internships.length > 0 && dispatch(fetchInternshipActions());
+  }, []);
 
   const handleCardClick = (internship) => {
     navigate(`/internship/${internship}`);

@@ -52,7 +52,7 @@ export const changePassword = async (passwordData) => {
 };
 
 export const fetchNewAccessTokenApi = async () => {
-  const url = `${userApi}/renwew-access-token`;
+  const url = `${userApi}/renew-access-token`;
   const method = "POST";
-  return await apiProcessor({ url, method, isPrivate: true });
+  return await apiProcessor({ url, method, isPrivate: true, useRefresh: true });
 };

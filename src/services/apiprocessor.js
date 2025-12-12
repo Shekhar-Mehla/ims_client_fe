@@ -14,14 +14,16 @@ export const apiProcessor = async ({
   payload,
   isPrivate,
   isAcessJWT = true,
+  useRefresh = false,
 }) => {
   try {
     const headers = {};
     if (isPrivate) {
-      const token = isAcessJWT ? getAccessToken() : getRefreshToken();
+      const token =
+        isAcessJWT && !useRefresh ? getAccessToken() : getRefreshToken();
       headers.authorization = `Bearer ${token}`;
     }
-    console.log(payload);
+    console.log("api proccess is called");
 
     const responsePending = axios({
       url,
@@ -37,10 +39,6 @@ export const apiProcessor = async ({
 
     return data;
   } catch (error) {
-    console.log("ERROR:", error.response?.data);
-    console.log("STATUS:", error.response?.status);
-    console.log("MESSAGE:", error?.message);
-
     // Return a structured error response
     return {
       status: "error",

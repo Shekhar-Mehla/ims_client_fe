@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Menu,
   X,
@@ -15,7 +15,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Link, useNavigate } from "react-router";
 import { useSelector, useDispatch } from "react-redux";
-import { logoutAction } from "../../features/user/useraction.js";
+import {
+  autologinAction,
+  logoutAction,
+} from "../../features/user/useraction.js";
 
 const Header = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -25,13 +28,26 @@ const Header = () => {
 
   // Check if user is authenticated
   const isAuthenticated = useSelector((state) => state.userInfo?.users?._id);
-  const user = useSelector((state) => state.userInfo?.users);
-  const { authId } = useSelector((state) => state.userInfo.users);
-  
+  const users = useSelector((state) => state.userInfo?.users);
+  const refrshtoken = localStorage.getItem("refreshToken");
+
+  useEffect(() => {
+    const tryAutoLogin = async () => {
+      try {
+        const result = await dispatch(autologinAction());
+      } catch (err) {
+        console.error("Auto login or profile fetch failed", err);
+      }
+    };
+    console.log(refrshtoken);
+
+    !users?._id && refrshtoken && tryAutoLogin();
+    // dependencies:
+  }, [users]);
 
   const handleLogout = async () => {
     try {
-      await dispatch(logoutAction(authId));
+      await dispatch(logoutAction(users?.authId));
       navigate("/");
     } catch (error) {
       console.error("Logout failed:", error);
@@ -88,12 +104,12 @@ const Header = () => {
                 className="flex items-center gap-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-neutral-800 p-2 rounded-lg transition-colors"
               >
                 <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                  {user?.firstName?.charAt(0)?.toUpperCase() ||
-                    user?.email?.charAt(0)?.toUpperCase() ||
+                  {users?.firstName?.charAt(0)?.toUpperCase() ||
+                    users?.email?.charAt(0)?.toUpperCase() ||
                     "U"}
                 </div>
                 <span className="text-gray-700 dark:text-gray-200 font-medium hidden lg:block">
-                  {user?.firstName || user?.email?.split("@")[0] || "User"}
+                  {users?.firstName || users?.email?.split("@")[0] || "User"}
                 </span>
               </div>
 
@@ -174,13 +190,13 @@ const Header = () => {
                 className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
               >
                 <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold">
-                  {user?.firstName?.charAt(0)?.toUpperCase() ||
-                    user?.email?.charAt(0)?.toUpperCase() ||
+                  {users?.firstName?.charAt(0)?.toUpperCase() ||
+                    users?.email?.charAt(0)?.toUpperCase() ||
                     "U"}
                 </div>
                 <div>
                   <div className="text-gray-700 dark:text-gray-200 font-medium">
-                    {user?.firstName || user?.email?.split("@")[0] || "User"}
+                    {users?.firstName || users?.email?.split("@")[0] || "User"}
                   </div>
                   <div className="text-sm text-gray-500">View Profile</div>
                 </div>

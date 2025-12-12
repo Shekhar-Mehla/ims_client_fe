@@ -28,7 +28,7 @@ import { FcGoogle } from "react-icons/fc";
 import { FaFacebook, FaGithub } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  autologinAction,
+  
   loginAction,
 } from "../../features/user/useraction.js";
 
@@ -37,40 +37,17 @@ const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
-  const returnUrl = searchParams.get("returnUrl");
-  console.log(location);
-  const path = location?.state?.from ?? "/login";
-  const { user, loading } = useSelector((state) => state.userInfo);
+  const returnUrl = searchParams.get("returnUrl") || "/";
+
+  const { users, loading } = useSelector((state) => state.userInfo);
+  console.log(users);
+  console.log(returnUrl);
 
   useEffect(() => {
-    const accessToken = localStorage.getItem("accessToken");
-    const refreshToken = localStorage.getItem("refreshToken");
-    // No token → do NOT run autologin
-    if (!accessToken && !refreshToken) {
-      return;
-    }
-    const tryAutoLogin = async () => {
-      if (user?._id) {
-        // already logged in
-        navigate(path);
-        return;
-      }
+    users?._id && navigate(returnUrl);
 
-      // Try auto-login
-      try {
-        const result = await dispatch(autologinAction());
-        console.log(result);
-        if (result?.success) {
-          navigate(path);
-        }
-      } catch (err) {
-        console.error("Auto login or profile fetch failed", err);
-      }
-    };
-
-    tryAutoLogin();
     // dependencies:
-  }, [user?._id, path, navigate, dispatch]);
+  }, [users?._id, dispatch]);
 
   const handleOnSubmit = async (prevState, formData) => {
     const email = formData.get("email");
@@ -100,7 +77,7 @@ const Login = () => {
       // return { success: true };
       // if (status === "success") {
       // setSkipAutoLoginOnce(true);
-      navigate(path);
+      navigate(returnUrl);
       // }
     } catch (error) {
       console.error("Login dispatch error:", error);

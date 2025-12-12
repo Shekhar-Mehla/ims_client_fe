@@ -132,24 +132,43 @@ export const logoutAction = (authId) => {
 
 export const autologinAction = () => {
   return async (dispatch) => {
+    const accessToken = sessionStorage.getItem("accessToken");
+    const refreshToken = localStorage.getItem("refreshToken");
+    if (!refreshToken) {
+      return;
+    }
     dispatch(setLoading(true));
+    console.log("auto login called");
     try {
-      const accessToken = sessionStorage.getItem("accessToken");
-      console.log(accessToken, " from autologin action");
       if (accessToken) {
-        dispatch(fetchProfileAction());
-        dispatch(setLoading(false));
-        return { success: true };
+        // dispatch(fetchProfileAction());
+        const response = await getUserProfile();
+        if (
+          response?.status === "error" &&
+          response?.message === "jwt expired"
+        ) {
+          const tokens = await fetchNewAccessTokenApi();
+          if (tokens.status === "success" && tokens?.payload) {
+            sessionStorage.setItem("accessToken", tokens?.payload);
+
+            const getUser = await getUserProfile();
+            if (getUser?.status === "success") {
+              dispatch(setUser(getUser?.payload));
+              return { success: true };
+            }
+          }
+        }
+        if (response?.status === "success" && response?.payload) {
+          dispatch(setUser(response?.payload));
+          return { success: true };
+        }
       }
-      const refreshToken = localStorage.getItem("refreshToken");
-      if (refreshToken) {
-        //  call an API to get the access token
-        const { status, payload } = await fetchNewAccessTokenApi();
-        if (status === "success") {
-          const { accessToken } = payload;
-          sessionStorage.setItem("accessToken", accessToken);
-          dispatch(fetchProfileAction());
-          dispatch(setLoading(false));
+      const tokens = await fetchNewAccessTokenApi();
+      if (tokens?.status === "success" && tokens?.payload) {
+        sessionStorage.setItem("accessToken", tokens?.payload);
+        const getUser = await getUserProfile();
+        if (getUser?.status === "success") {
+          dispatch(setUser(getUser?.payload));
           return { success: true };
         }
       }
