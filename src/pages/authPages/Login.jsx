@@ -27,10 +27,7 @@ import {
 import { FcGoogle } from "react-icons/fc";
 import { FaFacebook, FaGithub } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  
-  loginAction,
-} from "../../features/user/useraction.js";
+import { loginAction } from "../../features/user/useraction.js";
 
 const Login = () => {
   const dispatch = useDispatch();
@@ -45,8 +42,6 @@ const Login = () => {
 
   useEffect(() => {
     users?._id && navigate(returnUrl);
-
-    // dependencies:
   }, [users?._id, dispatch]);
 
   const handleOnSubmit = async (prevState, formData) => {
@@ -59,25 +54,8 @@ const Login = () => {
 
     try {
       const results = await dispatch(loginAction({ email, password }));
-      console.log(results);
 
-      // Navigate after successfulr login
-      // if (returnUrl) {
-      //   // If returning to application form, preserve the internship data
-      //   if (returnUrl.startsWith("/apply/")) {
-      //     const internship = location.state?.internship;
-      //     navigate(returnUrl, { state: { internship } });
-      //   } else {
-      //     navigate(returnUrl);
-      //   }
-      // } else {
-      //   navigate("/");
-      // }
-
-      // return { success: true };
-      // if (status === "success") {
-      // setSkipAutoLoginOnce(true);
-      navigate(returnUrl);
+      results.status === "success" && navigate(returnUrl);
       // }
     } catch (error) {
       console.error("Login dispatch error:", error);

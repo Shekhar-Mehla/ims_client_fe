@@ -21,18 +21,21 @@ import { fetchInternshipBySlugActions } from "../../features/internship/internsh
 
 const Intership = () => {
   const { slug } = useParams();
-  
+
   const navigate = useNavigate();
-  const { internships, loading, error } = useSelector(
+  const { internship, loading, error } = useSelector(
     (state) => state.internshipInfo
   );
+  console.log(internship);
   const dispatch = useDispatch();
   useEffect(() => {
-   !internships&& dispatch(fetchInternshipBySlugActions(slug));
+    dispatch(fetchInternshipBySlugActions(slug));
   }, [dispatch, slug]);
 
   const handleOnApplyNow = () => {
-    navigate(`/internship/${slug}/apply`);
+    navigate(`/internship/${slug}/apply`, {
+      state: { internshipId: internship._id, internship },
+    });
   };
   return (
     <div className="bg-gradient-to-br from-amber-100 to-yellow-200 min-h-screen w-full p-6 flex gap-6">
@@ -43,10 +46,10 @@ const Intership = () => {
 
           <div className="flex flex-col gap-3">
             <h1 className="text-2xl font-bold text-gray-800">
-              {internships.title}
+              {internship.title}
             </h1>
             <p className="text-gray-600 flex items-center gap-2">
-              <MapPin size={18} /> {internships.location}
+              <MapPin size={18} /> {internship.location}
             </p>
           </div>
         </div>
@@ -89,7 +92,7 @@ const Intership = () => {
         <div className="bg-white p-6 rounded-2xl shadow-xl" id="details">
           <h1 className="text-xl font-semibold mb-3">Details</h1>
           <p className="text-gray-700 leading-relaxed">
-            {internships.description}
+            {internship.description}
           </p>
         </div>
       </div>
@@ -109,36 +112,35 @@ const Intership = () => {
           <CardContent>
             <p className="text-gray-600 flex gap-2 items-center">
               <Calendar size={18} /> Duration:{" "}
-              {internships?.duration || "3 Months"}
+              {internship?.duration || "3 Months"}
             </p>
             <p className="text-gray-600 flex gap-2 items-center">
               <ClockFading size={18} /> Stipend:{" "}
-              {internships?.stipend || "₹15,000-30,000"}
+              {internship?.stipend || "₹15,000-30,000"}
             </p>
             <p className="text-gray-600 flex gap-2 items-center">
-              <Star size={18} /> Rating: {internships?.rating || 4.7}/5
+              <Star size={18} /> Rating: {internship?.rating || 4.7}/5
             </p>
             <p className="text-gray-600 flex gap-2 items-center">
-              <MessageCircle size={18} /> {internships?.reviewCount || 120}+
+              <MessageCircle size={18} /> {internship?.reviewCount || 120}+
               Reviews
             </p>
-            {internships?.applicationDeadline && (
+            {internship?.applicationDeadline && (
               <p className="text-red-600 flex gap-2 items-center text-sm mt-2">
                 <Calendar size={16} /> Deadline:{" "}
-                {new Date(
-                  internships?.applicationDeadline
-                ).toLocaleDateString()}
+                {new Date(internship?.applicationDeadline).toLocaleDateString()}
               </p>
             )}
           </CardContent>
           <CardFooter>
             <Button
               className="w-full bg-blue-600 text-white py-3 rounded-xl shadow-md"
+              disabled={loading || !internship || !internship._id}
               onClick={() => {
                 handleOnApplyNow();
               }}
             >
-              Apply Now
+              {loading ? "Loading..." : "Apply Now"}
             </Button>
           </CardFooter>
         </Card>

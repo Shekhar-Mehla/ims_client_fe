@@ -1,6 +1,7 @@
 import { createSlice } from "@reduxjs/toolkit";
 const initialState = {
   internships: [],
+  internship: {},
 };
 
 const internshipSlice = createSlice({
@@ -10,8 +11,11 @@ const internshipSlice = createSlice({
     setInternships: (state, action) => {
       state.internships = action.payload;
     },
+    // setInternship: (state, action) => {
+    //   state.internship = action.payload;
+    // },
     setInternshipBySlug: (state, action) => {
-      state.internships = action.payload;
+      state.internship = action.payload;
     },
     clearInternships: (state) => {
       state.internships = [];

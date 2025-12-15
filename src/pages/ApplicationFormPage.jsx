@@ -16,6 +16,7 @@ import {
   Check,
   Loader2,
   AlertCircle,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -169,8 +170,19 @@ const FileUpload = ({ label, name, accept, required, error, onChange }) => {
 };
 
 const ApplicationFormPage = () => {
-  const { internshipId } = useParams();
+  const { slug } = useParams();
   const location = useLocation();
+  const internshipId = location.state?.internshipId;
+  const navigate = useNavigate();
+
+  // Validate that we have the required internshipId
+  useEffect(() => {
+    if (!internshipId) {
+      console.error("No internshipId found in navigation state");
+      // Redirect back to internship page if no internshipId
+      navigate(`/internship/${slug}`, { replace: true });
+    }
+  }, [internshipId, navigate, slug]);
 
   const dispatch = useDispatch();
   const [currentStep, setCurrentStep] = useState(1);
@@ -191,6 +203,9 @@ const ApplicationFormPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [submitMessage, setSubmitMessage] = useState("");
+  const [showThankYouModal, setShowThankYouModal] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorDetails, setErrorDetails] = useState({ title: "", message: "" });
 
   const validateStep = (step) => {
     const stepErrors = {};
@@ -293,18 +308,73 @@ const ApplicationFormPage = () => {
       formData.append("internshipId", internshipId);
 
       // Here you would make actual API call
-      const { status, message } = await applyForInternship(formData);
+      const response = await applyForInternship(formData);
 
-      if (status === "error" && message === "jwt expired") {
-        localStorage.setItem("applyFormBackup", JSON.stringify(form));
-        await dispatch(logoutAction(authId));
+      // Check if API returned an error
+      if (response.status === "error") {
+        // Handle different types of API errors
+        if (response.message === "jwt expired" || response.statusCode === 401) {
+          // JWT expired - redirect to login
+          setErrorDetails({
+            title: "Session Expired",
+            message:
+              "Your session has expired. Please log in again to continue.",
+          });
+          setShowErrorModal(true);
+          // Optionally redirect to login after showing modal
+          setTimeout(() => {
+            dispatch(logoutAction());
+            navigate("/login");
+          }, 3000);
+        } else if (response.statusCode === 400) {
+          // Validation error
+          setErrors({
+            submit:
+              response.message || "Please check your form data and try again.",
+          });
+        } else if (response.statusCode === 409) {
+          // Already applied
+          setErrorDetails({
+            title: "Already Applied",
+            message: "You have already applied for this internship.",
+          });
+          setShowErrorModal(true);
+        } else if (response.statusCode === 500) {
+          // Server error
+          setErrorDetails({
+            title: "Server Error",
+            message:
+              "We're experiencing technical difficulties. Please try again later.",
+          });
+          setShowErrorModal(true);
+        } else {
+          // Generic API error
+          setErrors({
+            submit:
+              response.message ||
+              "Failed to submit application. Please try again.",
+          });
+        }
+        return;
       }
-      localStorage.removeItem("applyFormBackup");
+
+      // Success case
+      // if (response.status === "error" && response.message === "jwt expired") {
+      //   localStorage.setItem("applyFormBackup", JSON.stringify(form));
+      // }
+      // localStorage.removeItem("applyFormBackup");
 
       setSubmitSuccess(true);
       setSubmitMessage("Application submitted successfully!");
+      setShowThankYouModal(true);
     } catch (error) {
-      setErrors({ submit: error.message || "Failed to submit application" });
+      // Network or other unexpected errors
+      setErrorDetails({
+        title: "Connection Error",
+        message:
+          "Unable to connect to the server. Please check your internet connection and try again.",
+      });
+      setShowErrorModal(true);
     } finally {
       setIsSubmitting(false);
     }
@@ -1000,6 +1070,120 @@ const ApplicationFormPage = () => {
           </CardContent>
         </form>
       </Card>
+
+      {/* Thank You Modal */}
+      {showThankYouModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold text-slate-800">
+                  Application Submitted!
+                </h2>
+                <button
+                  onClick={() => setShowThankYouModal(false)}
+                  className="text-slate-400 hover:text-slate-600 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="text-center py-6">
+                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Check className="w-8 h-8 text-green-600" />
+                </div>
+                <h3 className="text-2xl font-bold text-slate-800 mb-2">
+                  Thank You!
+                </h3>
+                <p className="text-slate-600 mb-6 leading-relaxed">
+                  Your application has been submitted successfully. We'll review
+                  your application and get back to you soon.
+                </p>
+
+                <div className="space-y-3">
+                  <Button
+                    onClick={() => {
+                      setShowThankYouModal(false);
+                      navigate("/");
+                    }}
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    Go to Homepage
+                  </Button>
+                  <Button
+                    onClick={() => setShowThankYouModal(false)}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    Stay Here
+                  </Button>
+                </div>
+
+                <p className="text-sm text-slate-500 mt-4">
+                  You can also check your application status from your profile
+                  page.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Error Modal */}
+      {showErrorModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold text-slate-800">
+                  {errorDetails.title}
+                </h2>
+                <button
+                  onClick={() => setShowErrorModal(false)}
+                  className="text-slate-400 hover:text-slate-600 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="text-center py-6">
+                <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <AlertCircle className="w-8 h-8 text-red-600" />
+                </div>
+                <h3 className="text-2xl font-bold text-slate-800 mb-2">
+                  Oops!
+                </h3>
+                <p className="text-slate-600 mb-6 leading-relaxed">
+                  {errorDetails.message}
+                </p>
+
+                <div className="space-y-3">
+                  <Button
+                    onClick={() => {
+                      setShowErrorModal(false);
+                      if (errorDetails.title === "Session Expired") {
+                        navigate("/login");
+                      }
+                    }}
+                    className="w-full bg-red-600 hover:bg-red-700 text-white"
+                  >
+                    {errorDetails.title === "Session Expired"
+                      ? "Go to Login"
+                      : "Try Again"}
+                  </Button>
+                  <Button
+                    onClick={() => setShowErrorModal(false)}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    Close
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

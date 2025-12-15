@@ -40,8 +40,8 @@ const InternshipList = () => {
     !internships.length > 0 && dispatch(fetchInternshipActions());
   }, []);
 
-  const handleCardClick = (internship) => {
-    navigate(`/internship/${internship}`);
+  const handleCardClick = (slug) => {
+    navigate(`/internship/${slug}`);
   };
 
   const handleFilterChange = (filterType, value) => {
