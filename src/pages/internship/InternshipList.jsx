@@ -26,15 +26,20 @@ const InternshipList = () => {
     (state) => state.internshipInfo
   );
 
-  // Filter states
-  const [filters, setFilters] = useState({
+  // Filter states - separate applied and pending filters
+  const [appliedFilters, setAppliedFilters] = useState({
+    status: "all",
+    sortBy: "newest",
+    searchTerm: "",
+  });
+
+  const [pendingFilters, setPendingFilters] = useState({
     status: "all",
     sortBy: "newest",
     searchTerm: "",
   });
 
   const [liked, setLiked] = useState({});
-  const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
     !internships.length > 0 && dispatch(fetchInternshipActions());
@@ -45,30 +50,44 @@ const InternshipList = () => {
   };
 
   const handleFilterChange = (filterType, value) => {
-    setFilters((prev) => ({
+    setPendingFilters((prev) => ({
       ...prev,
       [filterType]: value,
     }));
   };
 
   const handleApplyFilters = () => {
-    setShowFilters(true);
+    setAppliedFilters(pendingFilters);
   };
 
-  // Filter and sort internships
+  const handleUndoChanges = () => {
+    setPendingFilters(appliedFilters);
+  };
+
+  const handleClearAllFilters = () => {
+    const defaults = {
+      status: "all",
+      sortBy: "newest",
+      searchTerm: "",
+    };
+    setPendingFilters(defaults);
+    setAppliedFilters(defaults);
+  };
+
+  // Filter and sort internships using applied filters
   const filteredInternships = internships
     ?.filter((internship) => {
       // Status filter
       if (
-        filters.status !== "all" &&
-        internship.status !== filters.status.toLowerCase()
+        appliedFilters.status !== "all" &&
+        internship.status !== appliedFilters.status.toLowerCase()
       ) {
         return false;
       }
 
       // Search term filter (searches in title, company, description)
-      if (filters.searchTerm) {
-        const searchLower = filters.searchTerm.toLowerCase();
+      if (appliedFilters.searchTerm) {
+        const searchLower = appliedFilters.searchTerm.toLowerCase();
         const matchesTitle = internship.title
           .toLowerCase()
           .includes(searchLower);
@@ -88,11 +107,21 @@ const InternshipList = () => {
     })
     ?.sort((a, b) => {
       // Sort logic
-      switch (filters.sortBy) {
+      switch (appliedFilters.sortBy) {
         case "newest":
           return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
         case "oldest":
           return new Date(a.createdAt || 0) - new Date(b.createdAt || 0);
+        case "deadline-soon":
+          return (
+            new Date(a.applicationDeadline || "9999-12-31") -
+            new Date(b.applicationDeadline || "9999-12-31")
+          );
+        case "deadline-far":
+          return (
+            new Date(b.applicationDeadline || "9999-12-31") -
+            new Date(a.applicationDeadline || "9999-12-31")
+          );
         case "applications-high":
           return b.applicationCount - a.applicationCount;
         case "applications-low":
@@ -141,7 +170,7 @@ const InternshipList = () => {
                       <input
                         type="text"
                         placeholder="Search internships..."
-                        value={filters.searchTerm}
+                        value={pendingFilters.searchTerm}
                         onChange={(e) =>
                           handleFilterChange("searchTerm", e.target.value)
                         }
@@ -155,20 +184,18 @@ const InternshipList = () => {
                         Sort By
                       </label>
                       <select
-                        value={filters.sortBy}
+                        value={pendingFilters.sortBy}
                         onChange={(e) =>
                           handleFilterChange("sortBy", e.target.value)
                         }
                         className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-amber-400 focus:outline-none transition-all bg-white"
                       >
-                        <option value="newest">Newest First</option>
-                        <option value="oldest">Oldest First</option>
-                        <option value="applications-high">
-                          Most Applications
-                        </option>
-                        <option value="applications-low">
-                          Least Applications
-                        </option>
+                        <option value="newest">Recently Posted</option>
+                        <option value="oldest">Oldest Posted</option>
+                        <option value="deadline-soon">Deadline Soon</option>
+                        <option value="deadline-far">Deadline Far</option>
+                        <option value="applications-high">Most Popular</option>
+                        <option value="applications-low">Least Popular</option>
                       </select>
                     </div>
 
@@ -178,7 +205,7 @@ const InternshipList = () => {
                         Status
                       </label>
                       <select
-                        value={filters.status}
+                        value={pendingFilters.status}
                         onChange={(e) =>
                           handleFilterChange("status", e.target.value)
                         }
@@ -191,23 +218,23 @@ const InternshipList = () => {
                       </select>
                     </div>
 
-                    {/* Clear Filters */}
+                    {/* Filter Actions */}
                     <div className="flex gap-2 mt-2">
                       <button
-                        onClick={() =>
-                          setFilters({
-                            status: "all",
-                            sortBy: "newest",
-                            searchTerm: "",
-                          })
-                        }
-                        className="flex-1 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors text-sm"
+                        onClick={handleUndoChanges}
+                        className="flex-1 bg-gray-500 text-white px-3 py-2 rounded-lg hover:bg-gray-600 transition-colors text-sm"
                       >
-                        Clear Filters
+                        Undo Changes
+                      </button>
+                      <button
+                        onClick={handleClearAllFilters}
+                        className="flex-1 bg-red-500 text-white px-3 py-2 rounded-lg hover:bg-red-600 transition-colors text-sm"
+                      >
+                        Clear All
                       </button>
                       <button
                         onClick={handleApplyFilters}
-                        className="flex-1 bg-amber-500 text-white px-4 py-2 rounded-lg hover:bg-amber-600 transition-colors text-sm"
+                        className="flex-1 bg-amber-500 text-white px-3 py-2 rounded-lg hover:bg-amber-600 transition-colors text-sm"
                       >
                         Apply
                       </button>
@@ -298,21 +325,21 @@ const InternshipList = () => {
                         {filteredInternships.length}
                       </span>{" "}
                       internship{filteredInternships.length !== 1 ? "s" : ""}
-                      {filters.status !== "all" && (
+                      {appliedFilters.status !== "all" && (
                         <span>
                           {" "}
                           with status{" "}
                           <span className="font-semibold text-amber-600 capitalize">
-                            {filters.status}
+                            {appliedFilters.status}
                           </span>
                         </span>
                       )}
-                      {filters.searchTerm && (
+                      {appliedFilters.searchTerm && (
                         <span>
                           {" "}
                           matching "
                           <span className="font-semibold text-amber-600">
-                            {filters.searchTerm}
+                            {appliedFilters.searchTerm}
                           </span>
                           "
                         </span>

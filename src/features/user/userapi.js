@@ -35,6 +35,13 @@ export const getUserProfile = async () => {
   return await apiProcessor({ url, method, isPrivate: true });
 };
 
+export const updateUserProfile = async (profileData) => {
+  const url = `${userApi}/profile`;
+  const method = "PATCH";
+  const payload = profileData;
+  return await apiProcessor({ url, method, payload, isPrivate: true });
+};
+
 export const logoutUser = async (authId) => {
   const payload = { authId };
 

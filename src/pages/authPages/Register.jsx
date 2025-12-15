@@ -74,13 +74,16 @@ const Register = () => {
         />
 
         <Card className="w-full sm:w-1/2   ">
-          <CardHeader>
-            <CardTitle className="text-4xl text-center">Sign up</CardTitle>
-            <CardDescription>
-              Enter your detials to create your account
+          <CardHeader className="px-8 pt-8">
+            <CardTitle className="text-3xl md:text-4xl text-center">
+              Create your account
+            </CardTitle>
+            <CardDescription className="text-center text-sm md:text-base text-slate-600">
+              Join thousands of students finding internships — it only takes a
+              minute.
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-8">
             <form action={formAction}>
               <div className="flex flex-col gap-6">
                 <div className="grid grid-cols-2 gap-4">
@@ -118,6 +121,7 @@ const Register = () => {
                     required
                   />
                 </div>
+
                 {/* password and conform password */}
                 <div className="grid grid-cols-2 gap-2">
                   {/* Password Field */}

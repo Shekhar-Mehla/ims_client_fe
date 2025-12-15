@@ -2,7 +2,12 @@
 
 import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { fetchProfileAction, changePasswordAction } from "../features/user/useraction";
+import { useNavigate } from "react-router";
+import {
+  fetchProfileAction,
+  changePasswordAction,
+  updateProfileAction,
+} from "../features/user/useraction";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,6 +29,7 @@ import {
 
 const ProfilePage = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const user = useSelector((state) => state.userInfo?.users);
   const isAuthenticated = useSelector((state) => state.userInfo?.users?._id);
 
@@ -157,10 +163,12 @@ const ProfilePage = () => {
     }
 
     try {
-      const result = await dispatch(changePasswordAction({
-        currentPassword: passwordData.currentPassword,
-        newPassword: passwordData.newPassword,
-      }));
+      const result = await dispatch(
+        changePasswordAction({
+          currentPassword: passwordData.currentPassword,
+          newPassword: passwordData.newPassword,
+        })
+      );
 
       if (result.success) {
         setMessage("Password changed successfully!");
@@ -172,7 +180,9 @@ const ProfilePage = () => {
       }
     } catch (error) {
       console.error("Password change failed:", error);
-      setMessage(error.message || "Failed to change password. Please try again.");
+      setMessage(
+        error.message || "Failed to change password. Please try again."
+      );
     } finally {
       setIsLoading(false);
     }
@@ -184,16 +194,69 @@ const ProfilePage = () => {
     setMessage("");
 
     try {
-      // TODO: Implement profile update API call
-      console.log("Updating profile:", formData);
+      // Extract mobile number and country code
+      let mobile = formData.mobile || "";
+      let countryCode = "+91"; // Default country code
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // If mobile includes country code, extract it
+      if (mobile && typeof mobile === "string") {
+        if (mobile.startsWith("+")) {
+          const parts = mobile.split(" ");
+          if (parts.length > 1) {
+            countryCode = parts[0] || "+91";
+            mobile = parts.slice(1).join("").trim();
+          } else {
+            // Try to extract country code from the beginning
+            const match = mobile.match(/^(\+\d{1,3})(.+)$/);
+            if (match) {
+              countryCode = match[1];
+              mobile = match[2].trim();
+            }
+          }
+        }
+      }
 
-      setMessage("Profile updated successfully!");
+      // Map formData to backend format (firstName -> fName, lastName -> lName)
+      const profileUpdatePayload = {
+        fName: formData.firstName || "",
+        lName: formData.lastName || "",
+        countryCode: countryCode,
+        mobile: mobile,
+        address: formData.address || "",
+        city: formData.city || "",
+        state: formData.state || "",
+        pincode: formData.pincode || "",
+        educationLevel: formData.educationLevel || "",
+        institutionName: formData.institutionName || "",
+        degree: formData.degree || "",
+        fieldOfStudy: formData.fieldOfStudy || "",
+        graduationYear: formData.graduationYear || "",
+        cgpa: formData.cgpa || "",
+        skills: formData.skills || "",
+        linkedinUrl: formData.linkedinUrl || "",
+        portfolioUrl: formData.portfolioUrl || "",
+        githubUrl: formData.githubUrl || "",
+      };
+
+      console.log("Updating profile:", profileUpdatePayload);
+
+      // Call the real API
+      const result = await dispatch(updateProfileAction(profileUpdatePayload));
+
+      if (result.success) {
+        // Refresh profile data from backend to ensure sync
+        await dispatch(fetchProfileAction());
+        setMessage("Profile updated successfully!");
+      } else {
+        setMessage(
+          result.error || "Failed to update profile. Please try again."
+        );
+      }
     } catch (error) {
       console.error("Profile update failed:", error);
-      setMessage("Failed to update profile. Please try again.");
+      setMessage(
+        error.message || "Failed to update profile. Please try again."
+      );
     } finally {
       setIsLoading(false);
     }

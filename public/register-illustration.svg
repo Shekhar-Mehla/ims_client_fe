@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+  <defs>
+    <linearGradient id="g" x1="0" x2="1">
+      <stop offset="0" stop-color="#60a5fa" />
+      <stop offset="1" stop-color="#f59e0b" />
+    </linearGradient>
+  </defs>
+  <rect width="100%" height="100%" fill="url(#g)" rx="20" />
+  <g transform="translate(80,80)">
+    <rect x="260" y="20" width="360" height="420" rx="14" fill="#fff" opacity="0.12" />
+    <g>
+      <circle cx="140" cy="140" r="52" fill="#fff" opacity="0.9" />
+      <rect x="100" y="210" width="200" height="18" rx="8" fill="#fff" opacity="0.9" />
+      <rect x="100" y="240" width="160" height="14" rx="7" fill="#fff" opacity="0.8" />
+    </g>
+    <g transform="translate(280,80)">
+      <rect x="0" y="20" width="140" height="28" rx="8" fill="#fff" opacity="0.95" />
+      <rect x="0" y="68" width="320" height="18" rx="8" fill="#fff" opacity="0.85" />
+      <rect x="0" y="100" width="220" height="14" rx="7" fill="#fff" opacity="0.75" />
+    </g>
+    <g transform="translate(120,300)">
+      <rect x="0" y="0" width="480" height="10" rx="6" fill="#fff" opacity="0.35" />
+      <rect x="0" y="24" width="220" height="10" rx="6" fill="#fff" opacity="0.35" />
+      <rect x="300" y="24" width="140" height="10" rx="6" fill="#fff" opacity="0.35" />
+    </g>
+  </g>
+  <g transform="translate(40,380)">
+    <text x="0" y="0" fill="#ffffff" font-size="20" font-family="Arial" >Join thousands of students building careers</text>
+  </g>
+</svg>

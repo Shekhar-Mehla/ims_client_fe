@@ -4,6 +4,7 @@ import {
   logoutUser,
   changePassword,
   fetchNewAccessTokenApi,
+  updateUserProfile,
 } from "./userapi.js";
 import { setLoading, setUser } from "./userslice.js";
 export const loginAction = (userData) => {
@@ -88,11 +89,64 @@ export const changePasswordAction = (passwordData) => {
         console.log("Password changed successfully");
         return { success: true };
       } else {
+        // Handle session expiration
+        if (
+          response.statusCode === 401 ||
+          response.message?.includes("Session expired")
+        ) {
+          // Clear tokens and redirect to login
+          sessionStorage.removeItem("accessToken");
+          localStorage.removeItem("refreshToken");
+          dispatch(setUser([]));
+          throw new Error("Session expired. Please log in again.");
+        }
         throw new Error(response.message || "Failed to change password");
       }
     } catch (error) {
       console.error("Password change error:", error);
       throw error;
+    }
+  };
+};
+
+export const updateProfileAction = (profileData) => {
+  return async (dispatch) => {
+    try {
+      console.log("Updating profile with application data...");
+      const response = await updateUserProfile(profileData);
+      console.log("Profile update response:", response);
+
+      if (response.status === "success") {
+        // Update Redux user state with latest profile
+        dispatch(setUser(response.payload));
+        return { success: true };
+      } else {
+        // Handle session expiration
+        if (
+          response.statusCode === 401 ||
+          response.message?.includes("Session expired")
+        ) {
+          // Clear tokens and redirect to login
+          sessionStorage.removeItem("accessToken");
+          localStorage.removeItem("refreshToken");
+          dispatch(setUser([]));
+          return {
+            success: false,
+            error: "Session expired. Please log in again.",
+          };
+        }
+        return {
+          success: false,
+          error: response.message || "Failed to update profile",
+        };
+      }
+    } catch (error) {
+      console.error("Profile update error:", error);
+      // Don't block application submission on profile update failure
+      return {
+        success: false,
+        error: error.message || "Failed to update profile",
+      };
     }
   };
 };
