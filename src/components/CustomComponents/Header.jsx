@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import {
   Menu,
   X,
@@ -15,6 +15,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Link, useNavigate } from "react-router";
 import { useSelector, useDispatch } from "react-redux";
+import NotificationIcon from "./NotificationIcon";
+import { getMyNotifications } from "../../features/notification/notificationapi";
+import { Bell } from "lucide-react";
 import {
   autologinAction,
   logoutAction,
@@ -54,6 +57,66 @@ const Header = () => {
     }
   };
 
+  // notification unread count for mobile menu
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    const fetchUnread = async () => {
+      if (!isAuthenticated || !mobileOpen) return;
+      try {
+        const res = await getMyNotifications();
+        if (res?.status === "success") {
+          const count = (res.payload || []).filter((n) => !n.isRead).length;
+          setUnreadCount(count);
+        }
+      } catch (err) {
+        console.error("fetchUnread", err);
+      }
+    };
+    fetchUnread();
+  }, [mobileOpen, isAuthenticated]);
+
+  // ---------------- Search behaviour ----------------
+  // refs for desktop and mobile search inputs
+  const mainSearchRef = useRef(null);
+  const mobileSearchRef = useRef(null);
+
+  // controlled values for search fields
+  const [searchQuery, setSearchQuery] = useState("");
+  const [mobileSearchQuery, setMobileSearchQuery] = useState("");
+
+  // visual state helpers for affordances
+  const isMainSearchActive = Boolean(
+    searchQuery && searchQuery.toString().trim().length > 0
+  );
+  const isMobileSearchActive = Boolean(
+    mobileSearchQuery && mobileSearchQuery.toString().trim().length > 0
+  );
+
+  const handleSearch = useCallback(
+    (query) => {
+      const q = (query || "").toString().trim();
+      if (!q) return;
+      navigate(`/search?q=${encodeURIComponent(q)}`);
+      // close mobile menu if open
+      setMobileOpen(false);
+    },
+    [navigate]
+  );
+
+  // keyboard shortcut (Ctrl/Cmd+K) to focus desktop search
+  useEffect(() => {
+    const onKey = (e) => {
+      if ((e.ctrlKey || e.metaKey) && (e.key === "k" || e.key === "K")) {
+        e.preventDefault();
+        mainSearchRef.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+  // --------------------------------------------------
+
   const links = [
     { name: "Home", href: "/", icon: <Home className="w-4 h-4" /> },
     {
@@ -74,8 +137,36 @@ const Header = () => {
         {/* Center: Search Bar */}
         <div className="flex-1 mx-4 hidden md:flex justify-center">
           <div className="relative w-full max-w-3xl">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <button
+              type="button"
+              onClick={() =>
+                searchQuery && searchQuery.toString().trim()
+                  ? handleSearch(searchQuery)
+                  : mainSearchRef.current?.focus()
+              }
+              title={
+                searchQuery
+                  ? `Search for "${searchQuery}"`
+                  : "Focus search (Ctrl/Cmd+K)"
+              }
+              aria-label="Search or focus"
+              className={`absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 transition-transform ${
+                isMainSearchActive
+                  ? "text-blue-600 hover:text-blue-700 hover:scale-105"
+                  : "text-gray-400 opacity-60 hover:opacity-80 animate-pulse"
+              }`}
+            >
+              <Search className="w-5 h-5" />
+            </button>
             <Input
+              ref={mainSearchRef}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleSearch(searchQuery);
+              }}
+              name="search"
+              aria-label="Search internships"
               placeholder="Search internships..."
               className="pl-10 pr-4 py-2 rounded-full w-full bg-white/90 dark:bg-neutral-800/80 border border-gray-200 dark:border-neutral-700 shadow-sm focus:ring-2 focus:ring-blue-500 transition"
             />
@@ -95,9 +186,23 @@ const Header = () => {
             </Link>
           ))}
 
+          {isAuthenticated && (
+            <Link
+              to="/my-applications"
+              className="flex items-center gap-1 text-gray-700 dark:text-gray-200 hover:text-blue-600 transition-colors font-medium"
+            >
+              <Briefcase className="w-4 h-4" />
+              My Applications
+            </Link>
+          )}
+
           {isAuthenticated ? (
             /* Authenticated User */
             <div className="flex items-center gap-3">
+              {/* Notification Icon - shown on desktop */}
+              <div className="hidden lg:block">
+                <NotificationIcon />
+              </div>
               {/* Profile Avatar */}
               <div
                 onClick={() => navigate("/profile")}
@@ -169,10 +274,69 @@ const Header = () => {
             </Link>
           ))}
 
+          {/* Mobile: Notifications + My Applications (when authenticated) */}
+          {isAuthenticated && (
+            <>
+              <Link
+                to="/notifications"
+                className="flex items-center justify-between gap-2 text-gray-700 dark:text-gray-200 hover:text-blue-600 transition-colors font-medium py-2 px-2 rounded-md"
+                onClick={() => setMobileOpen(false)}
+              >
+                <div className="flex items-center gap-2">
+                  <Bell className="w-4 h-4" />
+                  <span>Notifications</span>
+                </div>
+                {/* unread count */}
+                {unreadCount > 0 && (
+                  <span className="bg-red-600 text-white text-xs font-medium px-2 py-0.5 rounded-full">
+                    {unreadCount > 99 ? "99+" : unreadCount}
+                  </span>
+                )}
+              </Link>
+
+              <Link
+                to="/my-applications"
+                className="flex items-center gap-2 text-gray-700 dark:text-gray-200 hover:text-blue-600 transition-colors font-medium py-2 px-2 rounded-md"
+                onClick={() => setMobileOpen(false)}
+              >
+                <Briefcase className="w-4 h-4" />
+                My Applications
+              </Link>
+            </>
+          )}
+
           {/* Mobile Search */}
           <div className="relative mt-2">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <button
+              type="button"
+              onClick={() =>
+                mobileSearchQuery && mobileSearchQuery.toString().trim()
+                  ? handleSearch(mobileSearchQuery)
+                  : mobileSearchRef.current?.focus()
+              }
+              title={
+                mobileSearchQuery
+                  ? `Search for "${mobileSearchQuery}"`
+                  : "Focus mobile search"
+              }
+              aria-label="Search or focus mobile search"
+              className={`absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 transition-transform ${
+                isMobileSearchActive
+                  ? "text-blue-600 hover:text-blue-700 hover:scale-105"
+                  : "text-gray-400 opacity-60 hover:opacity-80 animate-pulse"
+              }`}
+            >
+              <Search className="w-5 h-5" />
+            </button>
             <Input
+              ref={mobileSearchRef}
+              value={mobileSearchQuery}
+              onChange={(e) => setMobileSearchQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleSearch(mobileSearchQuery);
+              }}
+              name="mobile-search"
+              aria-label="Search internships"
               placeholder="Search internships..."
               className="pl-10 pr-4 py-2 rounded-full w-full bg-white/90 dark:bg-neutral-800/80 border border-gray-200 dark:border-neutral-700 shadow-sm focus:ring-2 focus:ring-blue-500 transition"
             />

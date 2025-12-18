@@ -26,6 +26,7 @@ import SuccessModal from "../components/CustomComponents/SuccessModal";
 import ErrorModal from "../components/CustomComponents/ErrorModal";
 import ProgressBar from "../components/CustomComponents/ProgressBar";
 import FileUpload from "../components/CustomComponents/FileUpload";
+import { Check } from "lucide-react";
 
 // const initialState = {
 //   firstName: "",

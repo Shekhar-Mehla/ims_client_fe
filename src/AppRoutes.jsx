@@ -10,6 +10,9 @@ import InternshipList from "./pages/internship/InternshipList";
 import Intership from "./pages/internship/Intership";
 import ApplicationFormPage from "./pages/ApplicationFormPage";
 import ProfilePage from "./pages/ProfilePage";
+import MyApplications from "./pages/MyApplications";
+import NotificationsPage from "./pages/NotificationsPage";
+import SearchResults from "./pages/SearchResults";
 
 const AppRoutes = () => {
   return (
@@ -47,6 +50,26 @@ const AppRoutes = () => {
             </ProtectedRoute>
           }
         ></Route>
+
+        <Route
+          path="my-applications"
+          element={
+            <ProtectedRoute>
+              <MyApplications />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="notifications"
+          element={
+            <ProtectedRoute>
+              <NotificationsPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route path="search" element={<SearchResults />} />
         <Route
           path="forgot-password"
           element={<ForgotPassword></ForgotPassword>}
