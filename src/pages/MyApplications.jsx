@@ -12,7 +12,10 @@ const MyApplications = () => {
     if (!authId) return;
     setLoading(true);
     try {
-      const res = await getApplicationsByUser(authId);
+      // support authId being either an object ({ _id, email }) or a string id
+      const userId = authId?._id ? authId._id : authId;
+      const res = await getApplicationsByUser(userId);
+      console.log("GET /application/user response:", res);
       if (res?.status === "success") setApplications(res.payload || []);
       else setApplications([]);
     } catch (err) {
@@ -45,11 +48,23 @@ const MyApplications = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <div className="font-medium">
-                    {app.internshipId?.title || "Untitled"}
+                    {app.internshipId === null
+                      ? "Listing removed"
+                      : app.internshipId?.title ||
+                        app.internshipId?.company ||
+                        (typeof app.internshipId === "string"
+                          ? "View listing"
+                          : "Untitled")}
                   </div>
                   <div className="text-sm text-gray-500">
                     Applied on: {new Date(app.submittedAt).toLocaleDateString()}
                   </div>
+                  {/* Debug: show internshipId payload when title is missing */}
+                  {!app.internshipId?.title && (
+                    <div className="text-xs text-gray-400 mt-1">
+                      {JSON.stringify(app.internshipId)}
+                    </div>
+                  )}
                 </div>
                 <div className="text-sm px-3 py-1 rounded-md bg-gray-100 capitalize">
                   {app.status}

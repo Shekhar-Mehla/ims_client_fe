@@ -12,7 +12,8 @@ export const applyForInternship = async (applicationData) => {
 export const getApplicationsByUser = async (userId) => {
   const url = `${applicationApi}/user/${userId}`;
   const method = "GET";
-  return await apiProcessor({ url, method });
+  const isPrivate = true;
+  return await apiProcessor({ url, method, isPrivate });
 };
 export const getAllApplications = async () => {
   const url = `${applicationApi}/get-all-applications`;

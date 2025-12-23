@@ -184,7 +184,9 @@ const emptyInitialState = {
 const ApplicationFormPage = () => {
   const { slug } = useParams();
   const location = useLocation();
-  const internshipId = location.state?.internshipId;
+  const internship = location.state?.internship;
+  const internshipId =
+    location.state?.internshipId || internship?._id || internship?.id;
   const navigate = useNavigate();
 
   // Validate that we have the required internshipId
@@ -206,7 +208,6 @@ const ApplicationFormPage = () => {
     errors,
     setErrors,
   } = UseForm(emptyInitialState);
-  const internship = location.state?.internship;
 
   // Get user profile from Redux
   const user = useSelector((state) => state.userInfo?.users);
@@ -303,6 +304,16 @@ const ApplicationFormPage = () => {
 
     setIsSubmitting(true);
     setErrors({});
+
+    // Ensure internshipId and profileId are available
+    if (!internshipId || !profileId) {
+      setIsSubmitting(false);
+      setErrors({
+        submit:
+          "Missing internship or profile. Please reopen the internship listing and try again.",
+      });
+      return;
+    }
 
     try {
       const formData = new FormData();
