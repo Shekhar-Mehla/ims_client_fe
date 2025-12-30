@@ -3,15 +3,16 @@ import {
   getMyNotifications,
   markNotificationRead,
 } from "../features/notification/notificationapi";
-
+import { useSelector } from "react-redux";
 const NotificationsPage = () => {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(false);
+  const { users } = useSelector((state) => state.userInfo);
 
   const fetchNotifications = async () => {
     setLoading(true);
     try {
-      const res = await getMyNotifications();
+      const res = await getMyNotifications(users?._id);
       if (res?.status === "success") setNotifications(res.payload || []);
       else setNotifications([]);
     } catch (err) {
@@ -28,6 +29,7 @@ const NotificationsPage = () => {
 
   const markRead = async (id) => {
     try {
+      console.log(typeof id);
       await markNotificationRead(id);
       await fetchNotifications();
     } catch (err) {
