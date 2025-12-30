@@ -22,7 +22,7 @@ import {
   autologinAction,
   logoutAction,
 } from "../../features/user/useraction.js";
-
+import socket from "../../socket.js";
 const Header = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const toggleMobileMenu = () => setMobileOpen(!mobileOpen);
@@ -32,6 +32,24 @@ const Header = () => {
   // Check if user is authenticated
   const isAuthenticated = useSelector((state) => state.userInfo?.users?._id);
   const users = useSelector((state) => state.userInfo?.users);
+  // notification unread count for mobile menu
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [hasNewNotification, setHasNewNotification] = useState(false);
+  // ---------------- Search behaviour ----------------
+  // refs for desktop and mobile search inputs
+  const mainSearchRef = useRef(null);
+  const mobileSearchRef = useRef(null);
+
+  // controlled values for search fields
+  const [searchQuery, setSearchQuery] = useState("");
+  const [mobileSearchQuery, setMobileSearchQuery] = useState("");
+
+  const isMainSearchActive = Boolean(
+    searchQuery && searchQuery.toString().trim().length > 0
+  );
+  const isMobileSearchActive = Boolean(
+    mobileSearchQuery && mobileSearchQuery.toString().trim().length > 0
+  );
   const refrshtoken = localStorage.getItem("refreshToken");
 
   useEffect(() => {
@@ -57,41 +75,33 @@ const Header = () => {
     }
   };
 
-  // notification unread count for mobile menu
-  const [unreadCount, setUnreadCount] = useState(0);
-
+  // For Notification from the admin server
   useEffect(() => {
-    const fetchUnread = async () => {
-      if (!isAuthenticated || !mobileOpen) return;
-      try {
-        const res = await getMyNotifications();
-        if (res?.status === "success") {
-          const count = (res.payload || []).filter((n) => !n.isRead).length;
-          setUnreadCount(count);
-        }
-      } catch (err) {
-        console.error("fetchUnread", err);
-      }
-    };
-    fetchUnread();
-  }, [mobileOpen, isAuthenticated]);
+    if (users?._id) {
+      // socket connection
+      socket.connect();
+      // join user to socket room
+      socket.on("connect", () => {
+        // console.log("Socket connected:", socket.id);
+        socket.emit("join", users?._id);
+      });
+      socket.on("unreadCount", (count) => {
+        setUnreadCount(count);
+        setHasNewNotification(count > 0);
+      });
+      socket.on("applicationStatusUpdated", (data) => {
+        console.log("Application status updated:", data);
+        setUnreadCount((prev) => prev + 1);
+        setHasNewNotification(true);
 
-  // ---------------- Search behaviour ----------------
-  // refs for desktop and mobile search inputs
-  const mainSearchRef = useRef(null);
-  const mobileSearchRef = useRef(null);
-
-  // controlled values for search fields
-  const [searchQuery, setSearchQuery] = useState("");
-  const [mobileSearchQuery, setMobileSearchQuery] = useState("");
+        return () => {
+          socket.off("applicationStatusUpdated");
+        };
+      });
+    }
+  }, [users?._id]);
 
   // visual state helpers for affordances
-  const isMainSearchActive = Boolean(
-    searchQuery && searchQuery.toString().trim().length > 0
-  );
-  const isMobileSearchActive = Boolean(
-    mobileSearchQuery && mobileSearchQuery.toString().trim().length > 0
-  );
 
   const handleSearch = useCallback(
     (query) => {
@@ -195,14 +205,37 @@ const Header = () => {
               My Applications
             </Link>
           )}
-
+          {/* Notification */}
           {isAuthenticated ? (
             /* Authenticated User */
             <div className="flex items-center gap-3">
               {/* Notification Icon - shown on desktop */}
-              <div className="hidden lg:block">
+              {/* <div className="hidden lg:block">
                 <NotificationIcon />
+              </div> */}
+              <div
+                className="relative cursor-pointer"
+                onClick={() => {
+                  navigate("/notifications");
+                  setUnreadCount(0);
+                  setHasNewNotification(false);
+                }}
+              >
+                <Bell
+                  className={`w-6 h-6 transition ${
+                    hasNewNotification
+                      ? "text-red-600 animate-pulse"
+                      : "text-gray-700 dark:text-gray-200"
+                  }`}
+                />
+
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">
+                    {unreadCount > 99 ? "99+" : unreadCount}
+                  </span>
+                )}
               </div>
+
               {/* Profile Avatar */}
               <div
                 onClick={() => navigate("/profile")}
@@ -228,6 +261,8 @@ const Header = () => {
               </button>
             </div>
           ) : (
+            //test
+
             /* Non-authenticated User */
             <>
               <Link to="/login">
