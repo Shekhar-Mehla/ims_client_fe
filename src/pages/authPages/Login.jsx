@@ -36,13 +36,13 @@ const Login = () => {
   const [searchParams] = useSearchParams();
   const returnUrl = searchParams.get("returnUrl") || "/";
 
-  const { users, loading } = useSelector((state) => state.userInfo);
-  console.log(users);
-  console.log(returnUrl);
+  const { user, loading } = useSelector((state) => state.userInfo);
+ 
+ 
 
   useEffect(() => {
-    users?._id && navigate(returnUrl);
-  }, [users?._id, dispatch]);
+    user?._id && navigate(returnUrl);
+  }, [user?._id, dispatch]);
 
   const handleOnSubmit = async (prevState, formData) => {
     const email = formData.get("email");

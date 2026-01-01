@@ -15,23 +15,26 @@ import {
 import { Input } from "@/components/ui/input";
 import { Link, useNavigate } from "react-router";
 import { useSelector, useDispatch } from "react-redux";
-import NotificationIcon from "./NotificationIcon";
-import { getMyNotifications } from "../../features/notification/notificationapi";
+
 import { Bell } from "lucide-react";
 import {
   autologinAction,
   logoutAction,
 } from "../../features/user/useraction.js";
 import socket from "../../socket.js";
+import { fetchNotificationpActions } from "../../features/notification/notificationAction.js";
+import { getApplicationsByUserAction } from "../../features/application/applicationaction.js";
+import { fetchInternshipActions } from "../../features/internship/internshipaction.js";
 const Header = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const toggleMobileMenu = () => setMobileOpen(!mobileOpen);
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  // Check if user is authenticated
-  const isAuthenticated = useSelector((state) => state.userInfo?.users?._id);
-  const users = useSelector((state) => state.userInfo?.users);
+  const user = useSelector((state) => state.userInfo?.user);
+  const { internships, loading, error } = useSelector(
+    (state) => state.internshipInfo
+  );
   // notification unread count for mobile menu
   const [unreadCount, setUnreadCount] = useState(0);
   const [hasNewNotification, setHasNewNotification] = useState(false);
@@ -53,22 +56,46 @@ const Header = () => {
   const refrshtoken = localStorage.getItem("refreshToken");
 
   useEffect(() => {
-    const tryAutoLogin = async () => {
-      try {
-        const result = await dispatch(autologinAction());
-      } catch (err) {
-        console.error("Auto login or profile fetch failed", err);
-      }
-    };
-    console.log(refrshtoken);
+    // fetch internships ONCE if not present
+    if (internships.length === 0) {
+      dispatch(fetchInternshipActions());
+    }
 
-    !users?._id && refrshtoken && tryAutoLogin();
-    // dependencies:
-  }, [users]);
+    // auto login
+    if (!user?._id && refrshtoken) {
+      dispatch(autologinAction());
+    }
+
+    // when user exists
+    if (user?._id) {
+      dispatch(fetchNotificationpActions(user._id));
+      dispatch(getApplicationsByUserAction(user._id));
+
+      socket.connect();
+      socket.emit("join", user._id);
+      socket.on("unreadCount", (count) => {
+        setUnreadCount(count);
+        setHasNewNotification(count > 0);
+      });
+      socket.on("applicationStatusUpdated", (data) => {
+        console.log("Application status updated:", data);
+        dispatch(fetchNotificationpActions(user._id));
+        dispatch(getApplicationsByUserAction(user._id));
+
+        return () => {
+          socket.off("applicationStatusUpdated");
+        };
+      });
+    }
+
+    return () => {
+      socket.off("connect");
+    };
+  }, [dispatch, user?._id, internships.length]);
 
   const handleLogout = async () => {
     try {
-      await dispatch(logoutAction(users?.authId));
+      await dispatch(logoutAction(user?.authId));
       navigate("/");
     } catch (error) {
       console.error("Logout failed:", error);
@@ -76,30 +103,6 @@ const Header = () => {
   };
 
   // For Notification from the admin server
-  useEffect(() => {
-    if (users?._id) {
-      // socket connection
-      socket.connect();
-      // join user to socket room
-      socket.on("connect", () => {
-        // console.log("Socket connected:", socket.id);
-        socket.emit("join", users?._id);
-      });
-      socket.on("unreadCount", (count) => {
-        setUnreadCount(count);
-        setHasNewNotification(count > 0);
-      });
-      socket.on("applicationStatusUpdated", (data) => {
-        console.log("Application status updated:", data);
-        setUnreadCount((prev) => prev + 1);
-        setHasNewNotification(true);
-
-        return () => {
-          socket.off("applicationStatusUpdated");
-        };
-      });
-    }
-  }, [users?._id]);
 
   // visual state helpers for affordances
 
@@ -196,7 +199,7 @@ const Header = () => {
             </Link>
           ))}
 
-          {isAuthenticated && (
+          {user?._id && (
             <Link
               to="/my-applications"
               className="flex items-center gap-1 text-gray-700 dark:text-gray-200 hover:text-blue-600 transition-colors font-medium"
@@ -206,7 +209,7 @@ const Header = () => {
             </Link>
           )}
           {/* Notification */}
-          {isAuthenticated ? (
+          {user?._id ? (
             /* Authenticated User */
             <div className="flex items-center gap-3">
               {/* Notification Icon - shown on desktop */}
@@ -242,12 +245,12 @@ const Header = () => {
                 className="flex items-center gap-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-neutral-800 p-2 rounded-lg transition-colors"
               >
                 <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                  {users?.firstName?.charAt(0)?.toUpperCase() ||
-                    users?.email?.charAt(0)?.toUpperCase() ||
+                  {user?.firstName?.charAt(0)?.toUpperCase() ||
+                    user?.email?.charAt(0)?.toUpperCase() ||
                     "U"}
                 </div>
                 <span className="text-gray-700 dark:text-gray-200 font-medium hidden lg:block">
-                  {users?.firstName || users?.email?.split("@")[0] || "User"}
+                  {user?.firstName || user?.email?.split("@")[0] || "User"}
                 </span>
               </div>
 
@@ -310,7 +313,7 @@ const Header = () => {
           ))}
 
           {/* Mobile: Notifications + My Applications (when authenticated) */}
-          {isAuthenticated && (
+          {user?._id && (
             <>
               <Link
                 to="/notifications"
@@ -377,7 +380,7 @@ const Header = () => {
             />
           </div>
 
-          {isAuthenticated ? (
+          {user?._id ? (
             /* Authenticated User - Mobile */
             <>
               {/* Profile Link */}
@@ -389,13 +392,13 @@ const Header = () => {
                 className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
               >
                 <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold">
-                  {users?.firstName?.charAt(0)?.toUpperCase() ||
-                    users?.email?.charAt(0)?.toUpperCase() ||
+                  {user?.firstName?.charAt(0)?.toUpperCase() ||
+                    user?.email?.charAt(0)?.toUpperCase() ||
                     "U"}
                 </div>
                 <div>
                   <div className="text-gray-700 dark:text-gray-200 font-medium">
-                    {users?.firstName || users?.email?.split("@")[0] || "User"}
+                    {user?.firstName || user?.email?.split("@")[0] || "User"}
                   </div>
                   <div className="text-sm text-gray-500">View Profile</div>
                 </div>

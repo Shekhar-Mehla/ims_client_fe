@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { getApplicationsByUser } from "./applicationapi";
+
 const initialState = {
   application: [],
 };
@@ -8,7 +8,9 @@ const applicationSlice = createSlice({
   initialState,
   reducers: {
     setApplications: (state, action) => {
+      console.log(action.payload, "......act");
       state.application = action.payload;
+      
     },
     // getApplication: (state, action) => {
     //   state.application = action.payload;
@@ -16,5 +18,5 @@ const applicationSlice = createSlice({
   },
 });
 const { reducer, actions } = applicationSlice;
-export const { setApplications, getApplication } = actions;
+export const { setApplications } = actions;
 export default reducer;

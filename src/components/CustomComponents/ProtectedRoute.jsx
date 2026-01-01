@@ -4,11 +4,12 @@ import { Navigate, useLocation } from "react-router-dom";
 
 const ProtectedRoute = ({ children }) => {
   // const isAuthenticated = useSelector((state) => state.userInfo?.users?._id);
-  const { users, loading } = useSelector((state) => state.userInfo);
-  console.log(users);
-  const isAuthenticated = Boolean(users?._id);
+  const { user, loading } = useSelector((state) => state.userInfo);
+  console.log(user);
+  const isAuthenticated = Boolean(user?._id);
 
   const location = useLocation();
+  
 
   // if (loading) {
   //   return <div>Loading...</div>; // a spinner is even better

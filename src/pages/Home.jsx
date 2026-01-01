@@ -22,29 +22,20 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { fetchInternshipActions } from "../features/internship/internshipaction.js";
 
 const Home = () => {
-  const dispatch = useDispatch();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   // Get internships from Redux state
   const { internships } = useSelector((state) => state.internshipInfo);
-  const isAuthenticated = useSelector((state) => state.userInfo?.users?._id);
+  const isAuthenticated = useSelector((state) => state.userInfo?.user?._id);
   const user = useSelector((state) => state.userInfo?.users);
 
   // Fetch internships once on mount
   useEffect(() => {
-    if (!internships || internships.length === 0) {
-      setLoading(true);
-      dispatch(fetchInternshipActions())
-        .then(() => setLoading(false))
-        .catch(() => setLoading(false));
-    }
-    // We intentionally exclude `internships` from deps to avoid
-    // an infinite loop when the slice clears & refetches data.
-  }, [dispatch]);
+    internships.length > 0 && setLoading(false);
+  }, [internships]);
 
   // Filter and limit featured internships (active status, max 6)
   const featuredInternships =

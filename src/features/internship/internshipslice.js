@@ -17,6 +17,9 @@ const internshipSlice = createSlice({
     setInternshipBySlug: (state, action) => {
       state.internship = action.payload;
     },
+    setInternshipBySlug: (state, action) => {
+      state.internship = action.payload;
+    },
     clearInternships: (state) => {
       state.internships = [];
     },

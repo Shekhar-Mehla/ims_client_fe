@@ -1,38 +1,34 @@
 import React, { useEffect, useState } from "react";
 import { Bell } from "lucide-react";
-import {
-  getMyNotifications,
-  markNotificationRead,
-} from "../../features/notification/notificationapi";
+import { markNotificationRead } from "../../features/notification/notificationapi";
 import { useNavigate } from "react-router";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchNotificationpActions } from "../../features/notification/notificationAction";
+
 
 const NotificationIcon = () => {
-  const [notifications, setNotifications] = useState([]);
+  const dispatch = useDispatch();
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
+  const { items: notifications } = useSelector(
+    (state) => state.notificationInfo
+  );
 
-  const fetchNotifications = async () => {
-    try {
-      const res = await getMyNotifications();
-      if (res?.status === "success") {
-        setNotifications(res.payload || []);
-      } else {
-        setNotifications([]);
-      }
-    } catch (err) {
-      console.error("fetchNotifications", err);
-      setNotifications([]);
-    }
-  };
+  const { users } = useSelector((state) => state.userInfo);
 
   useEffect(() => {
-    fetchNotifications();
-    // refresh on interval for a better UX
-    const id = setInterval(fetchNotifications, 60_000);
+    if (!users?._id) return;
+    // fetch on mount
+    dispatch(fetchNotificationpActions(users?._id));
+    // optional: keep interval if you prefer polling
+    const id = setInterval(
+      () => dispatch(fetchNotificationpActions(users?._id)),
+      60_000
+    );
     return () => clearInterval(id);
-  }, []);
+  }, [dispatch, users?._id]);
 
-  const unreadCount = notifications.filter((n) => !n.isRead).length;
+  const unreadCount = (notifications || []).filter((n) => !n.isRead).length;
 
   const toggleOpen = () => setOpen((s) => !s);
 
@@ -44,7 +40,8 @@ const NotificationIcon = () => {
   const handleMarkRead = async (id) => {
     try {
       await markNotificationRead(id);
-      await fetchNotifications();
+      // refresh from DB
+      dispatch(fetchNotifications(users?._id));
     } catch (err) {
       console.error("mark read", err);
     }

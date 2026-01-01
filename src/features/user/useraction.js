@@ -30,7 +30,7 @@ export const loginAction = (userData) => {
 
             if (profileResponse.status === "success") {
               dispatch(setUser(profileResponse.payload));
-              console.log("User profile loaded and stored in Redux");
+             
               return { success: true };
             } else {
               console.warn("Failed to fetch user profile, but login succeeded");
@@ -60,13 +60,13 @@ export const loginAction = (userData) => {
 export const fetchProfileAction = () => {
   return async (dispatch) => {
     try {
-      console.log("Fetching user profile...");
+     
       const profileResponse = await getUserProfile();
-      console.log("Profile fetch response:", profileResponse);
+     
 
       if (profileResponse.status === "success") {
         dispatch(setUser(profileResponse.payload));
-        console.log("User profile updated in Redux");
+    
         return { success: true };
       } else {
         throw new Error(profileResponse.message || "Failed to fetch profile");
@@ -81,12 +81,12 @@ export const fetchProfileAction = () => {
 export const changePasswordAction = (passwordData) => {
   return async (dispatch) => {
     try {
-      console.log("Changing password...");
+      
       const response = await changePassword(passwordData);
-      console.log("Password change response:", response);
+  
 
       if (response.status === "success") {
-        console.log("Password changed successfully");
+     
         return { success: true };
       } else {
         // Handle session expiration
@@ -112,9 +112,9 @@ export const changePasswordAction = (passwordData) => {
 export const updateProfileAction = (profileData) => {
   return async (dispatch) => {
     try {
-      console.log("Updating profile with application data...");
+   
       const response = await updateUserProfile(profileData);
-      console.log("Profile update response:", response);
+     
 
       if (response.status === "success") {
         // Update Redux user state with latest profile
@@ -154,11 +154,11 @@ export const updateProfileAction = (profileData) => {
 export const logoutAction = (authId) => {
   return async (dispatch) => {
     try {
-      console.log("Logout action called");
+      
 
       // Call the logout API to clear server-side tokens/sessions
       const logoutResponse = await logoutUser(authId);
-      console.log("Logout API response:", logoutResponse);
+     
 
       // Clear tokens from browser storage regardless of API response
       sessionStorage.removeItem("accessToken");
@@ -167,7 +167,7 @@ export const logoutAction = (authId) => {
       // Reset user state in Redux
       dispatch(setUser([]));
 
-      console.log("User logged out successfully, tokens cleared");
+  
 
       return { success: true };
     } catch (error) {
@@ -192,7 +192,7 @@ export const autologinAction = () => {
       return;
     }
     dispatch(setLoading(true));
-    console.log("auto login called");
+    
     try {
       if (accessToken) {
         // dispatch(fetchProfileAction());
@@ -202,6 +202,7 @@ export const autologinAction = () => {
           response?.message === "jwt expired"
         ) {
           const tokens = await fetchNewAccessTokenApi();
+          
           if (tokens.status === "success" && tokens?.payload) {
             sessionStorage.setItem("accessToken", tokens?.payload);
 
@@ -214,15 +215,6 @@ export const autologinAction = () => {
         }
         if (response?.status === "success" && response?.payload) {
           dispatch(setUser(response?.payload));
-          return { success: true };
-        }
-      }
-      const tokens = await fetchNewAccessTokenApi();
-      if (tokens?.status === "success" && tokens?.payload) {
-        sessionStorage.setItem("accessToken", tokens?.payload);
-        const getUser = await getUserProfile();
-        if (getUser?.status === "success") {
-          dispatch(setUser(getUser?.payload));
           return { success: true };
         }
       }

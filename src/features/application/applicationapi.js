@@ -15,14 +15,14 @@ export const getApplicationsByUser = async (userId) => {
   const isPrivate = true;
   return await apiProcessor({ url, method, isPrivate });
 };
-export const getAllApplications = async () => {
-  const url = `${applicationApi}/get-all-applications`;
-  const method = "GET";
-  return await apiProcessor({ url, method });
-};
-export const updateApplicationStatus = async (applicationId, status) => {
-  const url = `${applicationApi}/update-status/${applicationId}`;
-  const method = "PUT";
-  const payload = { status };
-  return await apiProcessor({ url, method, payload });
-};
+// export const getAllApplications = async () => {
+//   const url = `${applicationApi}/get-all-applications`;
+//   const method = "GET";
+//   return await apiProcessor({ url, method });
+// };
+// export const updateApplicationStatus = async (applicationId, status) => {
+//   const url = `${applicationApi}/update-status/${applicationId}`;
+//   const method = "PUT";
+//   const payload = { status };
+//   return await apiProcessor({ url, method, payload });
+// };

@@ -1,37 +1,21 @@
-import React, { useEffect, useState } from "react";
-import {
-  getMyNotifications,
-  markNotificationRead,
-} from "../features/notification/notificationapi";
-import { useSelector } from "react-redux";
+import React, { useEffect } from "react";
+import { markNotificationRead } from "../features/notification/notificationapi";
+import { useSelector, useDispatch } from "react-redux";
+import { fetchInternshipActions } from "../features/internship/internshipaction";
+
 const NotificationsPage = () => {
-  const [notifications, setNotifications] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const { users } = useSelector((state) => state.userInfo);
-
-  const fetchNotifications = async () => {
-    setLoading(true);
-    try {
-      const res = await getMyNotifications(users?._id);
-      if (res?.status === "success") setNotifications(res.payload || []);
-      else setNotifications([]);
-    } catch (err) {
-      console.error("fetch notifications", err);
-      setNotifications([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchNotifications();
-  }, []);
+  const { user } = useSelector((state) => state.userInfo);
+  const { notifications, loading } = useSelector(
+    (state) => state.notificationInfo
+  );
 
   const markRead = async (id) => {
     try {
-      console.log(typeof id);
       await markNotificationRead(id);
-      await fetchNotifications();
+      // refresh from DB after marking as read
+      // if (users?._id) {
+
+      // }
     } catch (err) {
       console.error(err);
     }
@@ -43,12 +27,12 @@ const NotificationsPage = () => {
         <h2 className="text-2xl font-semibold mb-4">Notifications</h2>
         {loading && <div className="text-gray-500">Loading…</div>}
 
-        {!loading && notifications.length === 0 && (
+        {!loading && notifications?.length === 0 && (
           <div className="text-gray-500">No notifications yet.</div>
         )}
 
         <div className="space-y-3 mt-4">
-          {notifications.map((n) => (
+          {notifications?.map((n) => (
             <div
               key={n._id}
               className={`p-4 border rounded-md ${
