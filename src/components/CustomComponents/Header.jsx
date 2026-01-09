@@ -7,16 +7,12 @@ import {
   Search,
   Home,
   Briefcase,
-  Info,
-  Mail,
-  User,
   LogOut,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Link, useNavigate } from "react-router";
 import { useSelector, useDispatch } from "react-redux";
 
-import { Bell } from "lucide-react";
 import {
   autologinAction,
   logoutAction,
@@ -25,6 +21,8 @@ import socket from "../../socket.js";
 import { fetchNotificationpActions } from "../../features/notification/notificationAction.js";
 import { getApplicationsByUserAction } from "../../features/application/applicationaction.js";
 import { fetchInternshipActions } from "../../features/internship/internshipaction.js";
+import NotificationIcon from "./NotificationIcon"; // Import the component
+
 const Header = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const toggleMobileMenu = () => setMobileOpen(!mobileOpen);
@@ -35,9 +33,7 @@ const Header = () => {
   const { internships, loading, error } = useSelector(
     (state) => state.internshipInfo
   );
-  // notification unread count for mobile menu
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [hasNewNotification, setHasNewNotification] = useState(false);
+  
   // ---------------- Search behaviour ----------------
   // refs for desktop and mobile search inputs
   const mainSearchRef = useRef(null);
@@ -68,15 +64,12 @@ const Header = () => {
 
     // when user exists
     if (user?._id) {
-      dispatch(fetchNotificationpActions(user._id));
+      // dispatch(fetchNotificationpActions(user._id)); // NotificationIcon handles its own fetching now
       dispatch(getApplicationsByUserAction(user._id));
 
       socket.connect();
       socket.emit("join", user._id);
-      socket.on("unreadCount", (count) => {
-        setUnreadCount(count);
-        setHasNewNotification(count > 0);
-      });
+      
       socket.on("applicationStatusUpdated", (data) => {
         console.log("Application status updated:", data);
         dispatch(fetchNotificationpActions(user._id));
@@ -213,32 +206,10 @@ const Header = () => {
             /* Authenticated User */
             <div className="flex items-center gap-3">
               {/* Notification Icon - shown on desktop */}
-              {/* <div className="hidden lg:block">
+              <div className="hidden lg:block">
                 <NotificationIcon />
-              </div> */}
-              <div
-                className="relative cursor-pointer"
-                onClick={() => {
-                  navigate("/notifications");
-                  setUnreadCount(0);
-                  setHasNewNotification(false);
-                }}
-              >
-                <Bell
-                  className={`w-6 h-6 transition ${
-                    hasNewNotification
-                      ? "text-red-600 animate-pulse"
-                      : "text-gray-700 dark:text-gray-200"
-                  }`}
-                />
-
-                {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">
-                    {unreadCount > 99 ? "99+" : unreadCount}
-                  </span>
-                )}
               </div>
-
+              
               {/* Profile Avatar */}
               <div
                 onClick={() => navigate("/profile")}

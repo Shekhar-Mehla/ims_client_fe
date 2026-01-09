@@ -21,13 +21,10 @@ import { signInWithPopup } from "firebase/auth";
 import {
   auth,
   googleProvider,
-  facebookProvider,
-  githubProvider,
 } from "../../firebase/firebase-config.js";
 import { FcGoogle } from "react-icons/fc";
-import { FaFacebook, FaGithub } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
-import { loginAction } from "../../features/user/useraction.js";
+import { loginAction, googleLoginAction } from "../../features/user/useraction.js";
 
 const Login = () => {
   const dispatch = useDispatch();
@@ -38,8 +35,6 @@ const Login = () => {
 
   const { user, loading } = useSelector((state) => state.userInfo);
  
- 
-
   useEffect(() => {
     user?._id && navigate(returnUrl);
   }, [user?._id, dispatch]);
@@ -71,11 +66,15 @@ const Login = () => {
       const result = await signInWithPopup(auth, googleProvider);
       console.log("✅ Google Login Success:", result.user);
 
-      // Dispatch login action to update Redux state
-      // Note: OAuth login might need different handling for Redux state
+      const userData = {
+        email: result.user.email,
+        fName: result.user.displayName?.split(" ")[0] || "User",
+        lName: result.user.displayName?.split(" ").slice(1).join(" ") || "",
+        uid: result.user.uid,
+      };
 
-      // Set success state to trigger navigation
-      // This might need adjustment based on how OAuth login integrates with Redux
+      await dispatch(googleLoginAction(userData));
+
       navigate(returnUrl || "/", {
         state: returnUrl?.startsWith("/apply/")
           ? { internship: location.state?.internship }
@@ -83,48 +82,6 @@ const Login = () => {
       });
     } catch (error) {
       console.error("❌ Google Login Error:", error.message);
-    }
-  };
-
-  const handleFacebookLogin = async () => {
-    try {
-      const result = await signInWithPopup(auth, facebookProvider);
-      console.log("✅ Facebook Login Success:", result.user);
-
-      // Navigate directly for OAuth (bypass Redux for now)
-      if (returnUrl) {
-        if (returnUrl.startsWith("/apply/")) {
-          const internship = location.state?.internship;
-          navigate(returnUrl, { state: { internship } });
-        } else {
-          navigate(returnUrl);
-        }
-      } else {
-        navigate("/");
-      }
-    } catch (error) {
-      console.error("❌ Facebook Login Error:", error.message);
-    }
-  };
-
-  const handleGithubLogin = async () => {
-    try {
-      const result = await signInWithPopup(auth, githubProvider);
-      console.log("✅ GitHub Login Success:", result.user);
-
-      // Navigate directly for OAuth (bypass Redux for now)
-      if (returnUrl) {
-        if (returnUrl.startsWith("/apply/")) {
-          const internship = location.state?.internship;
-          navigate(returnUrl, { state: { internship } });
-        } else {
-          navigate(returnUrl);
-        }
-      } else {
-        navigate("/");
-      }
-    } catch (error) {
-      console.error("❌ GitHub Login Error:", error.message);
     }
   };
 
@@ -265,24 +222,6 @@ const Login = () => {
                   onClick={handleGoogleLogin}
                 >
                   <FcGoogle className="text-xl" /> Continue with Google
-                </Button>
-
-                <Button
-                  variant="outline"
-                  className="w-full flex items-center justify-center gap-2 border border-gray-300 hover:bg-blue-50 transition"
-                  onClick={handleFacebookLogin}
-                >
-                  <FaFacebook className="text-blue-600 text-xl" /> Continue with
-                  Facebook
-                </Button>
-
-                <Button
-                  variant="outline"
-                  className="w-full flex items-center justify-center gap-2 border border-gray-300 hover:bg-gray-100 transition"
-                  onClick={handleGithubLogin}
-                >
-                  <FaGithub className="text-gray-800 text-xl" /> Continue with
-                  GitHub
                 </Button>
               </div>
             </CardContent>

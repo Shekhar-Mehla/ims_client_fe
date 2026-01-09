@@ -5,8 +5,50 @@ import {
   changePassword,
   fetchNewAccessTokenApi,
   updateUserProfile,
+  googleLoginUser,
 } from "./userapi.js";
 import { setLoading, setUser } from "./userslice.js";
+
+export const googleLoginAction = (userData) => {
+  return async (dispatch) => {
+    try {
+      const userInfo = await googleLoginUser(userData);
+      const { status, payload } = userInfo;
+
+      if (status === "success") {
+        const { accessToken, refreshToken } = payload;
+
+        if (accessToken && refreshToken) {
+          sessionStorage.setItem("accessToken", accessToken);
+          localStorage.setItem("refreshToken", refreshToken);
+
+          try {
+            const profileResponse = await getUserProfile();
+
+            if (profileResponse.status === "success") {
+              dispatch(setUser(profileResponse.payload));
+              return { success: true };
+            } else {
+              dispatch(setUser({ email: userData.email, isLoggedIn: true }));
+              return { success: true };
+            }
+          } catch (profileError) {
+            dispatch(setUser({ email: userData.email, isLoggedIn: true }));
+            return { success: true };
+          }
+        } else {
+          throw new Error("Tokens not received from server");
+        }
+      } else {
+        throw new Error(payload || "Google login failed");
+      }
+    } catch (error) {
+      console.error("Google login action error:", error);
+      throw error;
+    }
+  };
+};
+
 export const loginAction = (userData) => {
   return async (dispatch) => {
     try {

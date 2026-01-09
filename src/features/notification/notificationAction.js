@@ -1,8 +1,9 @@
 import { getMyNotifications } from "./notificationapi";
-import { setNotification } from "./notificationslice";
+import { setNotification, setLoading, setError } from "./notificationslice";
 
 export const fetchNotificationpActions = (_id) => {
   return async (dispatch) => {
+    dispatch(setLoading());
     try {
       const notificationInfo = await getMyNotifications(_id);
       const { status, payload } = notificationInfo;
@@ -12,11 +13,12 @@ export const fetchNotificationpActions = (_id) => {
         dispatch(setNotification(payload));
         return { success: true };
       } else {
-        throw new Error(payload || "Failed to fetch internships");
+        throw new Error(payload || "Failed to fetch notifications");
       }
     } catch (error) {
-      console.error("Internship fetch error:", error);
-      throw error; // Re-throw for component handling
+      console.error("Notification fetch error:", error);
+      dispatch(setError(error.message));
+      throw error; 
     }
   };
 };

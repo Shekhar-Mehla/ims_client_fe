@@ -63,3 +63,10 @@ export const fetchNewAccessTokenApi = async () => {
   const method = "POST";
   return await apiProcessor({ url, method, isPrivate: true, useRefresh: true });
 };
+
+export const googleLoginUser = async (userData) => {
+  const url = `${userApi}/google-login`;
+  const method = "POST";
+  const payload = userData;
+  return await apiProcessor({ url, method, payload });
+};

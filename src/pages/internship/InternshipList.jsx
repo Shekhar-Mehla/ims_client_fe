@@ -1,11 +1,20 @@
-import { useEffect } from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { 
+  ChevronsDown, 
+  Heart, 
+  Search, 
+  Filter, 
+  MapPin, 
+  Briefcase, 
+  Calendar,
+  Building2 
+} from "lucide-react";
 
-import { ChevronsDown, Heart } from "lucide-react";
 import {
   Card,
   CardContent,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -14,8 +23,9 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { fetchInternshipActions } from "../../features/internship/internshipaction.js";
 
 const InternshipList = () => {
@@ -26,7 +36,7 @@ const InternshipList = () => {
     (state) => state.internshipInfo
   );
 
-  // Filter states - separate applied and pending filters
+  // Filter states
   const [appliedFilters, setAppliedFilters] = useState({
     status: "all",
     sortBy: "newest",
@@ -74,7 +84,7 @@ const InternshipList = () => {
     setAppliedFilters(defaults);
   };
 
-  // Filter and sort internships using applied filters
+  // Filter and sort logic
   const filteredInternships = internships
     ?.filter((internship) => {
       // Status filter
@@ -85,28 +95,18 @@ const InternshipList = () => {
         return false;
       }
 
-      // Search term filter (searches in title, company, description)
+      // Search term
       if (appliedFilters.searchTerm) {
         const searchLower = appliedFilters.searchTerm.toLowerCase();
-        const matchesTitle = internship.title
-          .toLowerCase()
-          .includes(searchLower);
-        const matchesCompany = internship.company
-          .toLowerCase()
-          .includes(searchLower);
-        const matchesDescription = internship.description
-          .toLowerCase()
-          .includes(searchLower);
-
-        if (!matchesTitle && !matchesCompany && !matchesDescription) {
-          return false;
-        }
+        return (
+          internship.title.toLowerCase().includes(searchLower) ||
+          internship.company.toLowerCase().includes(searchLower) ||
+          internship.description.toLowerCase().includes(searchLower)
+        );
       }
-
       return true;
     })
     ?.sort((a, b) => {
-      // Sort logic
       switch (appliedFilters.sortBy) {
         case "newest":
           return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
@@ -117,377 +117,240 @@ const InternshipList = () => {
             new Date(a.applicationDeadline || "9999-12-31") -
             new Date(b.applicationDeadline || "9999-12-31")
           );
+        // ... sort cases
         case "deadline-far":
-          return (
-            new Date(b.applicationDeadline || "9999-12-31") -
-            new Date(a.applicationDeadline || "9999-12-31")
-          );
-        case "applications-high":
-          return b.applicationCount - a.applicationCount;
-        case "applications-low":
-          return a.applicationCount - b.applicationCount;
+            return (
+              new Date(b.applicationDeadline || "9999-12-31") -
+              new Date(a.applicationDeadline || "9999-12-31")
+            );
+          case "applications-high":
+            return b.applicationCount - a.applicationCount;
+          case "applications-low":
+            return a.applicationCount - b.applicationCount;
         default:
           return 0;
       }
     });
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-amber-50 to-amber-200 px-4 py-6">
+    <div className="min-h-screen bg-gray-50/50 dark:bg-neutral-900 pt-24 pb-12 px-4 transition-colors">
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-3xl font-bold text-center mb-6 text-gray-800">
-          Find Your Perfect Internship
-        </h1>
-        <div className="flex flex-col lg:flex-row gap-6">
-          {/* Left side - Filters */}
-          <div className="w-full lg:w-1/3">
-            <Card className="p-6 shadow-lg rounded-xl border border-amber-200 bg-white/90 backdrop-blur-sm sticky top-4">
-              <CardHeader className="pb-4">
-                <CardTitle className="text-2xl font-semibold text-amber-700 flex items-center gap-2">
-                  🎯 Filters
-                  <span className="text-sm bg-amber-100 text-amber-800 px-2 py-1 rounded-full">
-                    {filteredInternships?.length || 0} results
-                  </span>
-                </CardTitle>
-              </CardHeader>
+        
+        {/* Header Section */}
+        <div className="text-center mb-10 space-y-3">
+          <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">
+            Find Your Dream Internship
+          </h1>
+          <p className="text-gray-500 dark:text-gray-400 text-lg max-w-2xl mx-auto">
+            Discover opportunities that match your skills and kickstart your career journey today.
+          </p>
+        </div>
 
-              <CardContent>
-                <Collapsible>
-                  <CollapsibleTrigger className="w-full">
-                    <div className="flex justify-between items-center border border-amber-300 rounded-lg p-3 hover:bg-amber-100 transition-all cursor-pointer">
-                      <span className="font-medium text-gray-800">
-                        Show Filters
-                      </span>
-                      <ChevronsDown className="w-5 h-5 text-amber-600 transition-transform duration-300 data-[state=open]:rotate-180" />
-                    </div>
-                  </CollapsibleTrigger>
+        <div className="flex flex-col lg:flex-row gap-8">
+          
+          {/* Left Sidebar - Filters */}
+          <aside className="w-full lg:w-1/4 space-y-6">
+            <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-sm border border-gray-100 dark:border-neutral-700 p-5 sticky top-24">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-lg font-semibold flex items-center gap-2 text-gray-900 dark:text-gray-100">
+                  <Filter className="w-5 h-5 text-blue-600" />
+                  Filters
+                </h2>
+                <span className="text-xs font-medium bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 px-2.5 py-1 rounded-full">
+                  {filteredInternships?.length || 0} results
+                </span>
+              </div>
 
-                  <CollapsibleContent className="mt-4 flex flex-col gap-4">
-                    {/* Search */}
-                    <div className="flex flex-col gap-2">
-                      <label className="font-medium text-gray-700 text-sm">
-                        Search
-                      </label>
-                      <input
+              <Collapsible defaultOpen className="space-y-6">
+                {/* Mobile Toggle (only visible on small screens usually, but here keeping consistent) */}
+                 {/* For this sidebar design, we keep it always open on desktop, collapsible logic can be adjusted for mobile responsiveness if needed, but keeping structure simple for now */}
+                
+                <div className="space-y-5">
+                  {/* Search */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Search</label>
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <Input
                         type="text"
-                        placeholder="Search internships..."
+                        placeholder="Job title, company..."
                         value={pendingFilters.searchTerm}
-                        onChange={(e) =>
-                          handleFilterChange("searchTerm", e.target.value)
-                        }
-                        className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-amber-400 focus:outline-none transition-all"
+                        onChange={(e) => handleFilterChange("searchTerm", e.target.value)}
+                        className="pl-9 bg-gray-50 dark:bg-neutral-900 border-gray-200 dark:border-neutral-700 focus-visible:ring-blue-500"
                       />
                     </div>
+                  </div>
 
-                    {/* Sort By */}
-                    <div className="flex flex-col gap-2">
-                      <label className="font-medium text-gray-700 text-sm">
-                        Sort By
-                      </label>
-                      <select
-                        value={pendingFilters.sortBy}
-                        onChange={(e) =>
-                          handleFilterChange("sortBy", e.target.value)
-                        }
-                        className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-amber-400 focus:outline-none transition-all bg-white"
-                      >
-                        <option value="newest">Recently Posted</option>
-                        <option value="oldest">Oldest Posted</option>
-                        <option value="deadline-soon">Deadline Soon</option>
-                        <option value="deadline-far">Deadline Far</option>
-                        <option value="applications-high">Most Popular</option>
-                        <option value="applications-low">Least Popular</option>
-                      </select>
+                  {/* Sort By */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Sort By</label>
+                    <div className="relative">
+                       <select
+                          value={pendingFilters.sortBy}
+                          onChange={(e) => handleFilterChange("sortBy", e.target.value)}
+                          className="w-full p-2.5 bg-gray-50 dark:bg-neutral-900 border border-gray-200 dark:border-neutral-700 rounded-md text-sm text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-blue-500 outline-none appearance-none cursor-pointer"
+                        >
+                          <option value="newest">Newest First</option>
+                          <option value="oldest">Oldest First</option>
+                          <option value="deadline-soon">Ending Soon</option>
+                          <option value="deadline-far">Ending Later</option>
+                          <option value="applications-high">Most Popular</option>
+                          <option value="applications-low">Less Competition</option>
+                        </select>
+                        <ChevronsDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
                     </div>
+                  </div>
 
-                    {/* Status */}
-                    <div className="flex flex-col gap-2">
-                      <label className="font-medium text-gray-700 text-sm">
-                        Status
-                      </label>
-                      <select
-                        value={pendingFilters.status}
-                        onChange={(e) =>
-                          handleFilterChange("status", e.target.value)
-                        }
-                        className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-amber-400 focus:outline-none transition-all bg-white"
-                      >
-                        <option value="all">All Status</option>
-                        <option value="active">Active</option>
-                        <option value="inactive">Inactive</option>
-                        <option value="expired">Expired</option>
-                      </select>
+                   {/* Status */}
+                   <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
+                    <div className="relative">
+                       <select
+                          value={pendingFilters.status}
+                          onChange={(e) => handleFilterChange("status", e.target.value)}
+                          className="w-full p-2.5 bg-gray-50 dark:bg-neutral-900 border border-gray-200 dark:border-neutral-700 rounded-md text-sm text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-blue-500 outline-none appearance-none cursor-pointer"
+                        >
+                          <option value="all">Any Status</option>
+                          <option value="active">Active</option>
+                          <option value="inactive">Inactive</option>
+                          <option value="expired">Expired</option>
+                        </select>
+                        <ChevronsDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
                     </div>
-
-                    {/* Filter Actions */}
-                    <div className="flex gap-2 mt-2">
-                      <button
-                        onClick={handleUndoChanges}
-                        className="flex-1 bg-gray-500 text-white px-3 py-2 rounded-lg hover:bg-gray-600 transition-colors text-sm"
-                      >
-                        Undo Changes
-                      </button>
-                      <button
-                        onClick={handleClearAllFilters}
-                        className="flex-1 bg-red-500 text-white px-3 py-2 rounded-lg hover:bg-red-600 transition-colors text-sm"
-                      >
-                        Clear All
-                      </button>
-                      <button
-                        onClick={handleApplyFilters}
-                        className="flex-1 bg-amber-500 text-white px-3 py-2 rounded-lg hover:bg-amber-600 transition-colors text-sm"
-                      >
-                        Apply
-                      </button>
-                    </div>
-                  </CollapsibleContent>
-                </Collapsible>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Right side - Internship Cards */}
-          <div className="w-full lg:w-2/3">
-            {loading && (
-              <div className="flex justify-center items-center py-12">
-                <div className="text-center">
-                  <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-amber-500 mx-auto mb-4"></div>
-                  <p className="text-gray-600 text-lg">
-                    Loading internships...
-                  </p>
+                  </div>
                 </div>
+
+                <div className="pt-4 border-t border-gray-100 dark:border-neutral-700 flex flex-col gap-2">
+                   <Button onClick={handleApplyFilters} className="w-full bg-blue-600 hover:bg-blue-700 text-white">
+                      Apply Filters
+                   </Button>
+                   <div className="flex gap-2">
+                      <Button variant="outline" onClick={handleUndoChanges} className="flex-1 text-xs">
+                        Undo
+                      </Button>
+                      <Button variant="outline" onClick={handleClearAllFilters} className="flex-1 text-xs hover:text-red-600 hover:border-red-200 hover:bg-red-50">
+                        Clear
+                      </Button>
+                   </div>
+                </div>
+              </Collapsible>
+            </div>
+          </aside>
+
+          {/* Right Side - List */}
+          <main className="flex-1">
+             {loading && (
+              <div className="flex flex-col items-center justify-center py-20">
+                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mb-4"></div>
+                <p className="text-gray-500">Finding opportunities...</p>
               </div>
             )}
 
             {error && (
-              <div className="text-center py-12">
-                <div className="text-red-500 mb-6">
-                  <svg
-                    className="w-16 h-16 mx-auto"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
-                    />
-                  </svg>
-                </div>
-                <p className="text-red-600 font-medium text-xl mb-2">
-                  Error loading internships
-                </p>
-                <p className="text-gray-500 text-lg">{error}</p>
+              <div className="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800/30 rounded-xl p-6 text-center">
+                 <p className="text-red-600 dark:text-red-400 font-medium">Something went wrong</p>
+                 <p className="text-sm text-red-500/80 mt-1">{error}</p>
+                 <Button variant="outline" onClick={() => dispatch(fetchInternshipActions())} className="mt-4 border-red-200 text-red-600 hover:bg-red-50">
+                    Try Again
+                 </Button>
               </div>
             )}
 
-            {!loading &&
-              !error &&
-              filteredInternships &&
-              filteredInternships.length === 0 && (
-                <div className="text-center py-12">
-                  <div className="text-gray-400 mb-6">
-                    <svg
-                      className="w-16 h-16 mx-auto"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
-                      />
-                    </svg>
+            {!loading && !error && filteredInternships?.length === 0 && (
+               <div className="bg-white dark:bg-neutral-800 rounded-xl border border-dashed border-gray-300 dark:border-neutral-700 p-12 text-center">
+                  <div className="w-16 h-16 bg-gray-50 dark:bg-neutral-900 rounded-full flex items-center justify-center mx-auto mb-4">
+                     <Search className="w-8 h-8 text-gray-400" />
                   </div>
-                  <p className="text-gray-600 font-medium text-xl mb-2">
-                    No internships found
-                  </p>
-                  <p className="text-gray-500 text-lg">
-                    Try adjusting your filters or check back later for new
-                    opportunities
-                  </p>
-                </div>
-              )}
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">No internships found</h3>
+                  <p className="text-gray-500 dark:text-gray-400 mt-2">Try adjusting your search or filters to find what you're looking for.</p>
+                  <Button variant="link" onClick={handleClearAllFilters} className="mt-2 text-blue-600">
+                    Clear all filters
+                  </Button>
+               </div>
+            )}
+            
+            <div className="grid gap-4">
+              {!loading && !error && filteredInternships?.map((internship) => (
+                <div 
+                  key={internship._id}
+                  onClick={() => handleCardClick(internship.slug)}
+                  className="group bg-white dark:bg-neutral-800 rounded-xl p-5 border border-gray-200 dark:border-neutral-700 shadow-sm hover:shadow-md hover:border-blue-200 dark:hover:border-blue-800 transition-all cursor-pointer relative overflow-hidden"
+                >
+                  <div className="absolute top-0 left-0 w-1 h-full bg-blue-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  
+                  <div className="flex flex-col md:flex-row gap-5">
+                     {/* Company Logo / Placeholder */}
+                     <div className="w-16 h-16 md:w-20 md:h-20 rounded-lg bg-gray-100 dark:bg-neutral-700 flex items-center justify-center flex-shrink-0 border border-gray-100 dark:border-neutral-600">
+                        {/* Replace with actual image if available */}
+                        <Building2 className="w-8 h-8 md:w-10 md:h-10 text-gray-400" />
+                     </div>
+                     
+                     <div className="flex-1 min-w-0">
+                        <div className="flex flex-col md:flex-row md:items-start justify-between gap-2">
+                           <div>
+                              <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400 transition-colors line-clamp-1">
+                                {internship.title}
+                              </h3>
+                              <p className="text-gray-600 dark:text-gray-400 font-medium flex items-center gap-1.5 mt-1">
+                                 {internship.company}
+                                 {/* <span className="w-1 h-1 rounded-full bg-gray-300 dark:bg-neutral-600" />
+                                 <span className="text-sm font-normal text-gray-500">2 days ago</span> */}
+                              </p>
+                           </div>
+                           
+                           <div className="flex items-center gap-2">
+                              {/* Save Button (Mock functionality) */}
+                              <button 
+                                onClick={(e) => {
+                                   e.stopPropagation();
+                                   setLiked(prev => ({...prev, [internship._id]: !prev[internship._id]}));
+                                }}
+                                className={`p-2 rounded-full hover:bg-gray-100 dark:hover:bg-neutral-700 transition-colors ${liked[internship._id] ? 'text-red-500' : 'text-gray-400'}`}
+                              >
+                                 <Heart className={`w-5 h-5 ${liked[internship._id] ? 'fill-current' : ''}`} />
+                              </button>
+                           </div>
+                        </div>
+                        
+                        <div className="flex flex-wrap items-center gap-3 mt-4 text-sm text-gray-500 dark:text-gray-400">
+                           <div className="flex items-center gap-1.5 bg-gray-50 dark:bg-neutral-900 px-2.5 py-1 rounded-md border border-gray-100 dark:border-neutral-700">
+                              <MapPin className="w-3.5 h-3.5" />
+                              {internship.location}
+                           </div>
+                           <div className="flex items-center gap-1.5 bg-gray-50 dark:bg-neutral-900 px-2.5 py-1 rounded-md border border-gray-100 dark:border-neutral-700">
+                              <Briefcase className="w-3.5 h-3.5" />
+                              {internship.type || "Full-time"}
+                           </div>
+                           <div className="flex items-center gap-1.5 bg-gray-50 dark:bg-neutral-900 px-2.5 py-1 rounded-md border border-gray-100 dark:border-neutral-700">
+                              <Calendar className="w-3.5 h-3.5" />
+                              {internship.duration || "3 Months"}
+                           </div>
+                        </div>
 
-            {!loading &&
-              !error &&
-              filteredInternships &&
-              filteredInternships.length > 0 && (
-                <div>
-                  {/* Results header */}
-                  <div className="flex justify-between items-center mb-6">
-                    <p className="text-gray-600">
-                      Showing{" "}
-                      <span className="font-semibold text-gray-800">
-                        {filteredInternships.length}
-                      </span>{" "}
-                      internship{filteredInternships.length !== 1 ? "s" : ""}
-                      {appliedFilters.status !== "all" && (
-                        <span>
-                          {" "}
-                          with status{" "}
-                          <span className="font-semibold text-amber-600 capitalize">
-                            {appliedFilters.status}
-                          </span>
-                        </span>
-                      )}
-                      {appliedFilters.searchTerm && (
-                        <span>
-                          {" "}
-                          matching "
-                          <span className="font-semibold text-amber-600">
-                            {appliedFilters.searchTerm}
-                          </span>
-                          "
-                        </span>
-                      )}
-                    </p>
-                  </div>
-
-                  <div className="grid gap-6 grid-cols-1 xl:grid-cols-2">
-                    {filteredInternships.map((internship) => (
-                      <Card
-                        key={internship._id}
-                        className="border rounded-xl shadow-md overflow-hidden transition-transform duration-300 hover:shadow-xl hover:-translate-y-1"
-                        onClick={() => handleCardClick(internship.slug)}
-                      >
-                        {/* Card Header */}
-                        <CardHeader className="p-4">
-                          <div className="flex items-start gap-4">
-                            {/* Internship Image */}
-                            <div className="w-24 h-24 flex-shrink-0">
-                              <img
-                                src="/internship.jpg"
-                                alt={internship.title}
-                                className="w-full h-full object-cover rounded-lg"
-                              />
+                         <div className="mt-4 pt-4 border-t border-gray-100 dark:border-neutral-700 flex items-center justify-between">
+                            <div className="flex gap-2 overflow-hidden mask-fade-right">
+                               {internship.roles?.slice(0, 3).map((role, i) => (
+                                  <Badge key={i} variant="secondary" className="bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-300 border-0 font-normal">
+                                     {role}
+                                  </Badge>
+                               ))}
+                               {internship.technologies?.slice(0, 2).map((tech, i) => (
+                                  <Badge key={i} variant="secondary" className="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 dark:bg-indigo-900/20 dark:text-indigo-300 border-0 font-normal">
+                                     {tech}
+                                  </Badge>
+                               ))}
                             </div>
-
-                            {/* Internship Details */}
-                            <div className="flex-1">
-                              <div className="flex justify-between items-start">
-                                <CardTitle className="text-lg font-semibold">
-                                  {internship.title}
-                                </CardTitle>
-                                {/* Wishlist Heart Icon */}
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setLiked((prev) => ({
-                                      ...prev,
-                                      [internship._id]: !prev[internship._id],
-                                    }));
-                                  }}
-                                  className={`transition-colors duration-200 ${
-                                    liked[internship._id]
-                                      ? "text-red-600"
-                                      : "text-gray-400 hover:text-red-500"
-                                  }`}
-                                >
-                                  <Heart className="h-5 w-5" />
-                                </button>
-                              </div>
-                              <p className="text-sm text-gray-600 mt-1">
-                                Location: {internship.location}
-                              </p>
-                              <p className="text-sm text-gray-600">
-                                Company: {internship.company}
-                              </p>
-                              <p className="text-sm text-gray-500">
-                                Applications: {internship.applicationCount}
-                              </p>
-                              <p className="text-sm text-gray-500">
-                                Posted by: {internship.postedByName}
-                              </p>
-                            </div>
-                          </div>
-                        </CardHeader>
-
-                        {/* Card Content */}
-                        <CardContent className="p-4 border-t">
-                          <div className="mb-3">
-                            <p className="text-sm text-gray-700 line-clamp-3">
-                              {internship.description}
-                            </p>
-                          </div>
-
-                          {/* Technologies */}
-                          {internship.technologies &&
-                            internship.technologies.length > 0 && (
-                              <div className="mb-3">
-                                <p className="text-xs font-medium text-gray-600 mb-1">
-                                  Technologies:
-                                </p>
-                                <div className="flex flex-wrap gap-1">
-                                  {internship.technologies
-                                    .slice(0, 4)
-                                    .map((tech, index) => (
-                                      <span
-                                        key={index}
-                                        className="px-2 py-1 bg-amber-100 text-amber-800 text-xs rounded-full"
-                                      >
-                                        {tech}
-                                      </span>
-                                    ))}
-                                  {internship.technologies.length > 4 && (
-                                    <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
-                                      +{internship.technologies.length - 4} more
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                            )}
-
-                          {/* Roles */}
-                          {internship.roles && internship.roles.length > 0 && (
-                            <div className="mb-3">
-                              <p className="text-xs font-medium text-gray-600 mb-1">
-                                Roles:
-                              </p>
-                              <div className="flex flex-wrap gap-1">
-                                {internship.roles
-                                  .slice(0, 2)
-                                  .map((role, index) => (
-                                    <span
-                                      key={index}
-                                      className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"
-                                    >
-                                      {role}
-                                    </span>
-                                  ))}
-                                {internship.roles.length > 2 && (
-                                  <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
-                                    +{internship.roles.length - 2} more
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          )}
-                        </CardContent>
-
-                        {/* Card Footer */}
-                        {/* <CardFooter className="p-4 border-t bg-gray-50">
-                          <Button
-                            className="w-full bg-amber-500 hover:bg-amber-600 text-white font-medium py-2.5"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              navigate(`/internship/${internship._id}`, {
-                                state: { internship },
-                              });
-                            }}
-                          >
-                            Apply Now
-                          </Button>
-                        </CardFooter> */}
-                      </Card>
-                    ))}
+                            
+                            <span className="text-xs font-medium text-gray-400 flex-shrink-0">
+                               {internship.applicationCount} Applicants
+                            </span>
+                         </div>
+                     </div>
                   </div>
                 </div>
-              )}
-          </div>
+              ))}
+            </div>
+          </main>
         </div>
       </div>
     </div>

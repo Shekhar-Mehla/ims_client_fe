@@ -30,8 +30,8 @@ import {
 const ProfilePage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const user = useSelector((state) => state.userInfo?.users);
-  const isAuthenticated = useSelector((state) => state.userInfo?.users?._id);
+  const user = useSelector((state) => state.userInfo?.user);
+  const isAuthenticated = useSelector((state) => state.userInfo?.user?._id);
 
   const [formData, setFormData] = useState({
     firstName: "",

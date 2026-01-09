@@ -1,6 +1,8 @@
 import { createSlice } from "@reduxjs/toolkit";
 const initialState = {
   notifications: [],
+  loading: false,
+  error: null,
 };
 
 const notificationSlice = createSlice({
@@ -9,12 +11,18 @@ const notificationSlice = createSlice({
   reducers: {
     setNotification: (state, action) => {
       state.notifications = action.payload;
+      state.loading = false;
+      state.error = null;
     },
-    // setInternship: (state, action) => {
-    //   state.internship = action.payload;
-    // },
+    setLoading: (state) => {
+      state.loading = true;
+    },
+    setError: (state, action) => {
+      state.loading = false;
+      state.error = action.payload;
+    },
   },
 });
 const { reducer, actions } = notificationSlice;
-export const { setNotification } = actions;
+export const { setNotification, setLoading, setError } = actions;
 export default reducer;
