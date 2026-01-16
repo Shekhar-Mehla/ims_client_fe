@@ -192,7 +192,6 @@ const ApplicationFormPage = () => {
   // Validate that we have the required internshipId
   useEffect(() => {
     if (!internshipId) {
-      console.error("No internshipId found in navigation state");
       // Redirect back to internship page if no internshipId
       navigate(`/internship/${slug}`, { replace: true });
     }
@@ -411,10 +410,6 @@ const ApplicationFormPage = () => {
 
         await dispatch(updateProfileAction(profileUpdatePayload));
       } catch (profileUpdateError) {
-        console.error(
-          "Failed to update profile after application:",
-          profileUpdateError
-        );
       }
 
       // if (response.status === "error" && response.message === "jwt expired") {
@@ -454,7 +449,6 @@ const ApplicationFormPage = () => {
         hasPrefilledRef.current = true;
         return; // Don't overwrite saved data
       } catch (error) {
-        console.error("Error parsing saved form data:", error);
         // Continue to prefill from user/internship if parsing fails
       }
     }
@@ -466,34 +460,23 @@ const ApplicationFormPage = () => {
     const hasValidUser =
       user && !Array.isArray(user) && Object.keys(user).length > 0;
 
-    // Debug: Log user object to see what data is available
-    if (user) {
-      console.log("ApplicationFormPage - User object:", user);
-      console.log("ApplicationFormPage - User email:", user.email);
-    }
-
     // If form is empty and we have valid user/internship data, prefill it
     if (isFormEmpty && (hasValidUser || internship)) {
       if (hasValidUser && internship) {
         const prefilledState = buildInitialState(user, internship);
-        console.log("ApplicationFormPage - Prefilled state:", prefilledState);
         setForm(prefilledState);
         hasPrefilledRef.current = true;
-        console.log("Form prefilled with user profile and internship data");
       } else if (hasValidUser) {
         // If only user data is available, prefill what we can
         const prefilledState = buildInitialState(user, internship || {});
-        console.log("ApplicationFormPage - Prefilled state:", prefilledState);
         setForm(prefilledState);
         hasPrefilledRef.current = true;
-        console.log("Form prefilled with user profile data");
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, internship]);
 
   const handleNext = () => {
-    console.log(currentStep);
     const stepErrors = validateStep(currentStep);
     if (Object.keys(stepErrors).length > 0) {
       setErrors(stepErrors);

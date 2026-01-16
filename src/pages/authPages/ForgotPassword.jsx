@@ -27,13 +27,11 @@ const ForgotPassword = () => {
     }
     if (otp) {
       // make api call here
-      console.log(otp);
       return startTransition(() => {
         setStep("reset");
       });
     }
     if (password) {
-      console.log(password);
     }
   };
 

@@ -71,7 +71,6 @@ const Header = () => {
       socket.emit("join", user._id);
       
       socket.on("applicationStatusUpdated", (data) => {
-        console.log("Application status updated:", data);
         dispatch(fetchNotificationpActions(user._id));
         dispatch(getApplicationsByUserAction(user._id));
 
@@ -91,7 +90,6 @@ const Header = () => {
       await dispatch(logoutAction(user?.authId));
       navigate("/");
     } catch (error) {
-      console.error("Logout failed:", error);
     }
   };
 

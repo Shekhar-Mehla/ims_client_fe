@@ -75,9 +75,6 @@ const ProfilePage = () => {
   useEffect(() => {
     if (isAuthenticated && user && Object.keys(user).length <= 3) {
       // Only _id, email, and maybe a few other basic fields
-      console.log(
-        "ProfilePage - User data incomplete, fetching full profile..."
-      );
       dispatch(fetchProfileAction());
     }
   }, [isAuthenticated, user, dispatch]);
@@ -179,7 +176,6 @@ const ProfilePage = () => {
         });
       }
     } catch (error) {
-      console.error("Password change failed:", error);
       setMessage(
         error.message || "Failed to change password. Please try again."
       );
@@ -238,8 +234,6 @@ const ProfilePage = () => {
         githubUrl: formData.githubUrl || "",
       };
 
-      console.log("Updating profile:", profileUpdatePayload);
-
       // Call the real API
       const result = await dispatch(updateProfileAction(profileUpdatePayload));
 
@@ -253,7 +247,6 @@ const ProfilePage = () => {
         );
       }
     } catch (error) {
-      console.error("Profile update failed:", error);
       setMessage(
         error.message || "Failed to update profile. Please try again."
       );

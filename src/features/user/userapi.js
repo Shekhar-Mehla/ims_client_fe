@@ -6,7 +6,6 @@ const apiBaseUrl = import.meta.env.VITE_BASE_API_URL || "http://localhost:8001";
 export const userApi = apiBaseUrl + "/api/v1/auth";
 
 export const registerUser = async (userData) => {
-  console.log(userData);
   const url = `${userApi}/register`;
   const method = "POST";
   const payload = userData;
@@ -15,7 +14,6 @@ export const registerUser = async (userData) => {
 };
 
 export const loginUser = async (userData) => {
-  console.log(userData);
   const url = `${userApi}/login`;
   const method = "POST";
   const payload = userData;
@@ -23,7 +21,6 @@ export const loginUser = async (userData) => {
 };
 
 export const verifyEmail = async (token) => {
-  console.log(token);
   const url = `${userApi}/verify-email?token=${token}`;
   const method = "GET";
   return await apiProcessor({ url, method });

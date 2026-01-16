@@ -5,7 +5,6 @@ import { Search } from "lucide-react";
 
 const handleSubmit = (e) => {
   e.preventDefault();
-  console.log("Searching for:", query);
   // 👉 here you can call an API or filter your data
 };
 

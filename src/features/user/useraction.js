@@ -43,7 +43,6 @@ export const googleLoginAction = (userData) => {
         throw new Error(payload || "Google login failed");
       }
     } catch (error) {
-      console.error("Google login action error:", error);
       throw error;
     }
   };
@@ -75,13 +74,11 @@ export const loginAction = (userData) => {
              
               return { success: true };
             } else {
-              console.warn("Failed to fetch user profile, but login succeeded");
               // Still return success since login worked
               dispatch(setUser({ email: userData.email, isLoggedIn: true }));
               return { success: true };
             }
           } catch (profileError) {
-            console.error("Error fetching user profile:", profileError);
             // Still return success since login worked
             dispatch(setUser({ email: userData.email, isLoggedIn: true }));
             return { success: true };
@@ -93,7 +90,6 @@ export const loginAction = (userData) => {
         throw new Error(payload || "Login failed");
       }
     } catch (error) {
-      console.error("Login error:", error);
       throw error; // Re-throw to be caught by the component
     }
   };
@@ -114,7 +110,6 @@ export const fetchProfileAction = () => {
         throw new Error(profileResponse.message || "Failed to fetch profile");
       }
     } catch (error) {
-      console.error("Fetch profile error:", error);
       throw error;
     }
   };
@@ -145,7 +140,6 @@ export const changePasswordAction = (passwordData) => {
         throw new Error(response.message || "Failed to change password");
       }
     } catch (error) {
-      console.error("Password change error:", error);
       throw error;
     }
   };
@@ -183,7 +177,6 @@ export const updateProfileAction = (profileData) => {
         };
       }
     } catch (error) {
-      console.error("Profile update error:", error);
       // Don't block application submission on profile update failure
       return {
         success: false,
@@ -213,14 +206,11 @@ export const logoutAction = (authId) => {
 
       return { success: true };
     } catch (error) {
-      console.error("Logout error:", error);
-
       // Even if API call fails, clear local tokens and reset state
       sessionStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
       dispatch(setUser([]));
 
-      console.log("Local logout completed despite API error");
       return { success: true };
     }
   };
@@ -261,7 +251,6 @@ export const autologinAction = () => {
         }
       }
     } catch (error) {
-      console.error("Auto-login error:", error);
       throw error;
     }
   };

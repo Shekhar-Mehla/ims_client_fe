@@ -38,7 +38,6 @@ const refreshAccessToken = async () => {
     }
     return null;
   } catch (error) {
-    console.error("Token refresh failed:", error);
     return null;
   }
 };
@@ -58,7 +57,6 @@ export const apiProcessor = async ({
         isAcessJWT && !useRefresh ? getAccessToken() : getRefreshToken();
       headers.authorization = `Bearer ${token}`;
     }
-    console.log("api proccess is called");
 
     const responsePending = axios({
       url,
@@ -93,13 +91,9 @@ export const apiProcessor = async ({
       !useRefresh &&
       !error._retried
     ) {
-      console.log("Access token expired, attempting to refresh...");
-
       const newAccessToken = await refreshAccessToken();
 
       if (newAccessToken) {
-        console.log("Token refreshed successfully, retrying request...");
-
         // Retry the original request with new token
         try {
           const retryHeaders = { ...headers };
@@ -127,7 +121,6 @@ export const apiProcessor = async ({
         }
       } else {
         // Token refresh failed - user needs to login again
-        console.error("Token refresh failed, user needs to login");
         return {
           status: "error",
           message: "Session expired. Please log in again.",

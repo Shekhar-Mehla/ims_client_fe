@@ -7,7 +7,6 @@ export const fetchNotificationpActions = (_id) => {
     try {
       const notificationInfo = await getMyNotifications(_id);
       const { status, payload } = notificationInfo;
-      console.log(status, payload, "action");
 
       if (status === "success") {
         dispatch(setNotification(payload));
@@ -16,7 +15,6 @@ export const fetchNotificationpActions = (_id) => {
         throw new Error(payload || "Failed to fetch notifications");
       }
     } catch (error) {
-      console.error("Notification fetch error:", error);
       dispatch(setError(error.message));
       throw error; 
     }

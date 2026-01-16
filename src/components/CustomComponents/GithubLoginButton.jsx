@@ -7,9 +7,7 @@ const GithubLoginButton = () => {
   const handleGithubLogin = async () => {
     try {
       const result = await signInWithPopup(auth, githubProvider);
-      console.log("✅ GitHub Login Success:", result.user);
     } catch (error) {
-      console.error("❌ GitHub Login Error:", error.message);
     }
   };
 

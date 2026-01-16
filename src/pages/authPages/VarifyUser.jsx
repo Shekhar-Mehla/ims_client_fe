@@ -22,10 +22,9 @@ const VarifyUser = () => {
 
   useEffect(() => {
     const verifyUserEmail = async () => {
-      console.log("Starting email verification process...");
+
 
       if (!token) {
-        console.log("No token found, showing error");
         setVerificationStatus("error");
         setIsLoading(false);
         toast.error("Verification token is missing");
@@ -33,45 +32,31 @@ const VarifyUser = () => {
       }
 
       try {
-        console.log("Making API call to verify email...");
         setIsLoading(true);
 
-        console.log(token);
         // Add minimum loading time for better UX (1 second minimum)
         const startTime = Date.now();
         const response = await verifyEmail(token);
         const elapsedTime = Date.now() - startTime;
         const minimumLoadingTime = 1000; // 1 second
 
-        console.log(
-          "API response received:",
-          response,
-          "Elapsed time:",
-          elapsedTime + "ms"
-        );
-
         if (elapsedTime < minimumLoadingTime) {
-          console.log("Waiting for minimum loading time...");
           await new Promise((resolve) =>
             setTimeout(resolve, minimumLoadingTime - elapsedTime)
           );
         }
 
         if (response?.status === "success") {
-          console.log("Verification successful");
           setVerificationStatus("success");
           toast.success("Email verified successfully!");
         } else {
-          console.log("Verification failed:", response?.message);
           setVerificationStatus("error");
           toast.error(response?.message || "Email verification failed");
         }
       } catch (error) {
-        console.error("Verification error:", error);
         setVerificationStatus("error");
         toast.error("An error occurred during verification");
       } finally {
-        console.log("Setting loading to false");
         setIsLoading(false);
       }
     };

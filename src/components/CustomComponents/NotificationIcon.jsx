@@ -15,18 +15,15 @@ const NotificationIcon = () => {
     (state) => state.notificationInfo
   );
 
-  const { user } = useSelector((state) => state.userInfo); // Fixed selector: users -> user matches Header.jsx usage
+  const { user } = useSelector((state) => state.userInfo); 
+
 
   useEffect(() => {
     if (!user?._id) return;
     // fetch on mount
     dispatch(fetchNotificationpActions(user._id));
     // optional: keep interval if you prefer polling
-    const id = setInterval(
-      () => dispatch(fetchNotificationpActions(user._id)),
-      60_000
-    );
-    return () => clearInterval(id);
+    
   }, [dispatch, user?._id]);
 
   // Handle both boolean and string "false" for unread status due to schema defining isRead as String

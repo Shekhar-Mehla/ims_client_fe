@@ -8,13 +8,9 @@ const applicationSlice = createSlice({
   initialState,
   reducers: {
     setApplications: (state, action) => {
-      console.log(action.payload, "......act");
       state.application = action.payload;
-      
     },
-    // getApplication: (state, action) => {
-    //   state.application = action.payload;
-    // },
+    
   },
 });
 const { reducer, actions } = applicationSlice;

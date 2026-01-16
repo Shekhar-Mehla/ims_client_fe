@@ -12,9 +12,7 @@ const GoogleLoginButton = () => {
   const handleGoogleLogin = async () => {
     try {
       const result = await signInWithPopup(auth, googleProvider);
-      console.log("✅ Google Login Success:", result.user);
     } catch (error) {
-      console.error("❌ Google Login Error:", error.message);
     }
   };
 

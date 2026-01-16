@@ -9,7 +9,6 @@ export const fetchInternshipActions = () => {
   return async (dispatch) => {
     dispatch(clearInternships());
     try {
-      console.log("Fetching internships...");
       const internshipInfo = await getAllInternships();
       const { status, payload } = internshipInfo;
 
@@ -21,7 +20,6 @@ export const fetchInternshipActions = () => {
         throw new Error(payload || "Failed to fetch internships");
       }
     } catch (error) {
-      console.error("Internship fetch error:", error);
       throw error; // Re-throw for component handling
     }
   };
@@ -30,10 +28,8 @@ export const fetchInternshipActions = () => {
 export const fetchInternshipBySlugActions = (slug) => {
   return async (dispatch) => {
     try {
-      console.log("Fetching internship by slug:", slug);
       const internshipInfo = await getInternshipBySlug(slug);
       const { status, payload } = internshipInfo;
-      console.log("Internship by slug fetch result:", status, payload);
       if (status === "success") {
         // You can dispatch an action to set the specific internship if needed
         dispatch(setInternshipBySlug(payload));
@@ -42,7 +38,6 @@ export const fetchInternshipBySlugActions = (slug) => {
         throw new Error(payload || "Failed to fetch internship by slug");
       }
     } catch (error) {
-      console.error("Internship by slug fetch error:", error);
       throw error; // Re-throw for component handling
     }
   };

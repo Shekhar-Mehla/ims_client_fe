@@ -7,9 +7,7 @@ const FacebookLoginButton = () => {
   const handleFacebookLogin = async () => {
     try {
       const result = await signInWithPopup(auth, facebookProvider);
-      console.log("✅ Facebook Login Success:", result.user);
     } catch (error) {
-      console.error("❌ Facebook Login Error:", error.message);
     }
   };
 

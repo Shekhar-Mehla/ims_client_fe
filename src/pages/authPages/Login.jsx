@@ -53,7 +53,6 @@ const Login = () => {
       results.status === "success" && navigate(returnUrl);
       // }
     } catch (error) {
-      console.error("Login dispatch error:", error);
       return { error: error.message || "Login failed" };
     }
   };
@@ -64,7 +63,6 @@ const Login = () => {
   const handleGoogleLogin = async () => {
     try {
       const result = await signInWithPopup(auth, googleProvider);
-      console.log("✅ Google Login Success:", result.user);
 
       const userData = {
         email: result.user.email,
@@ -81,7 +79,6 @@ const Login = () => {
           : undefined,
       });
     } catch (error) {
-      console.error("❌ Google Login Error:", error.message);
     }
   };
 

@@ -5,7 +5,6 @@ import { Navigate, useLocation } from "react-router-dom";
 const ProtectedRoute = ({ children }) => {
   // const isAuthenticated = useSelector((state) => state.userInfo?.users?._id);
   const { user, loading } = useSelector((state) => state.userInfo);
-  console.log(user);
   const isAuthenticated = Boolean(user?._id);
 
   const location = useLocation();
@@ -17,7 +16,6 @@ const ProtectedRoute = ({ children }) => {
 
   if (!isAuthenticated) {
     // Redirect to login with return URL
-    console.log("no user");
     const returnUrl = encodeURIComponent(location.pathname + location.search);
     return <Navigate to={`/login?returnUrl=${returnUrl}`} replace />;
   }
