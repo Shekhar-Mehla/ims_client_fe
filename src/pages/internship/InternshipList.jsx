@@ -53,7 +53,7 @@ const InternshipList = () => {
 
   useEffect(() => {
     !internships.length > 0 && dispatch(fetchInternshipActions());
-  }, []);
+  }, [dispatch, internships.length]);
 
   const handleCardClick = (slug) => {
     navigate(`/internship/${slug}`);

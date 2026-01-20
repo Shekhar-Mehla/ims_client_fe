@@ -69,9 +69,14 @@ const PersonalDetailsStep = ({ form, handleInputChange, errors }) => {
             onChange={handleInputChange}
             className="w-24 h-10 px-3 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
           >
-            <option value="+91">+91</option>
-            <option value="+1">+1</option>
-            <option value="+44">+44</option>
+            <option value="+91">IN (+91)</option>
+            <option value="+61">AU (+61)</option>
+            <option value="+1">US (+1)</option>
+            <option value="+1">CA (+1)</option>
+            <option value="+44">UK (+44)</option>
+            <option value="+64">NZ (+64)</option>
+            <option value="+65">SG (+65)</option>
+            <option value="+971">UAE (+971)</option>
           </select>
           <Input
             id="mobile"

@@ -16,14 +16,12 @@ const NotificationsPage = () => {
       if (user?._id) {
         dispatch(fetchNotificationpActions(user._id));
       }
-    } catch (err) {
+    } catch {
+      // Failed to mark as read
     }
   };
 
-  const markAllRead = async () => {
-    // Optional: Implement bulk mark read if API supports or loop
-    // For now, simple implementation or omit if not part of current scope but UI can have the button
-  };
+  // const markAllRead = async () => { ... }
 
   // Effect to ensure we have latest data on page load
   useEffect(() => {

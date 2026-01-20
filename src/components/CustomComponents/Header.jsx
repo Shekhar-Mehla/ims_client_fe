@@ -8,6 +8,7 @@ import {
   Home,
   Briefcase,
   LogOut,
+  Bell,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Link, useNavigate } from "react-router";
@@ -30,10 +31,10 @@ const Header = () => {
   const dispatch = useDispatch();
 
   const user = useSelector((state) => state.userInfo?.user);
-  const { internships, loading, error } = useSelector(
-    (state) => state.internshipInfo
-  );
-  
+  const { application } = useSelector((state) => state.applicationInfo);
+  const { internships } = useSelector((state) => state.internshipInfo);
+  const { unreadCount } = useSelector((state) => state.notificationInfo);
+
   // ---------------- Search behaviour ----------------
   // refs for desktop and mobile search inputs
   const mainSearchRef = useRef(null);
@@ -56,40 +57,45 @@ const Header = () => {
     if (internships.length === 0) {
       dispatch(fetchInternshipActions());
     }
+  }, [dispatch, internships.length]);
 
+  useEffect(() => {
     // auto login
     if (!user?._id && refrshtoken) {
       dispatch(autologinAction());
     }
+  }, [dispatch, user?._id, refrshtoken]);
 
-    // when user exists
+  useEffect(() => {
+    // data & socket for authenticated user
     if (user?._id) {
-      // dispatch(fetchNotificationpActions(user._id)); // NotificationIcon handles its own fetching now
-      dispatch(getApplicationsByUserAction(user._id));
+      // Only fetch if not already present
+      if (application === null) {
+        dispatch(getApplicationsByUserAction(user._id));
+      }
 
       socket.connect();
       socket.emit("join", user._id);
-      
-      socket.on("applicationStatusUpdated", (data) => {
+
+      const handleApplicationUpdate = () => {
         dispatch(fetchNotificationpActions(user._id));
         dispatch(getApplicationsByUserAction(user._id));
+      };
 
-        return () => {
-          socket.off("applicationStatusUpdated");
-        };
-      });
+      socket.on("applicationStatusUpdated", handleApplicationUpdate);
+
+      return () => {
+        socket.off("applicationStatusUpdated", handleApplicationUpdate);
+      };
     }
-
-    return () => {
-      socket.off("connect");
-    };
-  }, [dispatch, user?._id, internships.length]);
+  }, [dispatch, user?._id, application === null]);
 
   const handleLogout = async () => {
     try {
       await dispatch(logoutAction(user?.authId));
       navigate("/");
-    } catch (error) {
+    } catch {
+      // Optional: Handle logout error (e.g., toast)
     }
   };
 

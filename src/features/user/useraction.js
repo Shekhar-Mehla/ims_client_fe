@@ -3,7 +3,6 @@ import {
   getUserProfile,
   logoutUser,
   changePassword,
-  fetchNewAccessTokenApi,
   updateUserProfile,
   googleLoginUser,
 } from "./userapi.js";
@@ -11,136 +10,115 @@ import { setLoading, setUser } from "./userslice.js";
 
 export const googleLoginAction = (userData) => {
   return async (dispatch) => {
-    try {
-      const userInfo = await googleLoginUser(userData);
-      const { status, payload } = userInfo;
+    const userInfo = await googleLoginUser(userData);
+    const { status, payload } = userInfo;
 
-      if (status === "success") {
-        const { accessToken, refreshToken } = payload;
+    if (status === "success") {
+      const { accessToken, refreshToken } = payload;
 
-        if (accessToken && refreshToken) {
-          sessionStorage.setItem("accessToken", accessToken);
-          localStorage.setItem("refreshToken", refreshToken);
+      if (accessToken && refreshToken) {
+        sessionStorage.setItem("accessToken", accessToken);
+        localStorage.setItem("refreshToken", refreshToken);
 
-          try {
-            const profileResponse = await getUserProfile();
+        try {
+          const profileResponse = await getUserProfile();
 
-            if (profileResponse.status === "success") {
-              dispatch(setUser(profileResponse.payload));
-              return { success: true };
-            } else {
-              dispatch(setUser({ email: userData.email, isLoggedIn: true }));
-              return { success: true };
-            }
-          } catch (profileError) {
+          if (profileResponse.status === "success") {
+            dispatch(setUser(profileResponse.payload));
+            return { success: true };
+          } else {
             dispatch(setUser({ email: userData.email, isLoggedIn: true }));
             return { success: true };
           }
-        } else {
-          throw new Error("Tokens not received from server");
+        } catch {
+          dispatch(setUser({ email: userData.email, isLoggedIn: true }));
+          return { success: true };
         }
       } else {
-        throw new Error(payload || "Google login failed");
+        throw new Error("Tokens not received from server");
       }
-    } catch (error) {
-      throw error;
+    } else {
+      throw new Error(payload || "Google login failed");
     }
   };
 };
 
 export const loginAction = (userData) => {
   return async (dispatch) => {
-    try {
-      const userInfo = await loginUser(userData);
-      const { status, payload } = userInfo;
+    const userInfo = await loginUser(userData);
+    const { status, payload } = userInfo;
 
-      if (status === "success") {
-        // Store tokens in session and local storage
-        const { accessToken, refreshToken } = payload;
+    if (status === "success") {
+      // Store tokens in session and local storage
+      const { accessToken, refreshToken } = payload;
 
-        if (accessToken && refreshToken) {
-          // Store access token in session storage (short-lived)
-          sessionStorage.setItem("accessToken", accessToken);
+      if (accessToken && refreshToken) {
+        // Store access token in session storage (short-lived)
+        sessionStorage.setItem("accessToken", accessToken);
 
-          // Store refresh token in local storage (long-lived)
-          localStorage.setItem("refreshToken", refreshToken);
+        // Store refresh token in local storage (long-lived)
+        localStorage.setItem("refreshToken", refreshToken);
 
-          // Fetch user profile after successful token storage
-          try {
-            const profileResponse = await getUserProfile();
+        // Fetch user profile after successful token storage
+        try {
+          const profileResponse = await getUserProfile();
 
-            if (profileResponse.status === "success") {
-              dispatch(setUser(profileResponse.payload));
-             
-              return { success: true };
-            } else {
-              // Still return success since login worked
-              dispatch(setUser({ email: userData.email, isLoggedIn: true }));
-              return { success: true };
-            }
-          } catch (profileError) {
+          if (profileResponse.status === "success") {
+            dispatch(setUser(profileResponse.payload));
+
+            return { success: true };
+          } else {
             // Still return success since login worked
             dispatch(setUser({ email: userData.email, isLoggedIn: true }));
             return { success: true };
           }
-        } else {
-          throw new Error("Tokens not received from server");
+        } catch {
+          // Still return success since login worked
+          dispatch(setUser({ email: userData.email, isLoggedIn: true }));
+          return { success: true };
         }
       } else {
-        throw new Error(payload || "Login failed");
+        throw new Error("Tokens not received from server");
       }
-    } catch (error) {
-      throw error; // Re-throw to be caught by the component
+    } else {
+      throw new Error(payload || "Login failed");
     }
   };
 };
 
 export const fetchProfileAction = () => {
   return async (dispatch) => {
-    try {
-     
-      const profileResponse = await getUserProfile();
-     
+    const profileResponse = await getUserProfile();
 
-      if (profileResponse.status === "success") {
-        dispatch(setUser(profileResponse.payload));
-    
-        return { success: true };
-      } else {
-        throw new Error(profileResponse.message || "Failed to fetch profile");
-      }
-    } catch (error) {
-      throw error;
+    if (profileResponse.status === "success") {
+      dispatch(setUser(profileResponse.payload));
+
+      return { success: true };
+    } else {
+      throw new Error(profileResponse.message || "Failed to fetch profile");
     }
   };
 };
 
 export const changePasswordAction = (passwordData) => {
   return async (dispatch) => {
-    try {
-      
-      const response = await changePassword(passwordData);
-  
+    const response = await changePassword(passwordData);
 
-      if (response.status === "success") {
-     
-        return { success: true };
-      } else {
-        // Handle session expiration
-        if (
-          response.statusCode === 401 ||
-          response.message?.includes("Session expired")
-        ) {
-          // Clear tokens and redirect to login
-          sessionStorage.removeItem("accessToken");
-          localStorage.removeItem("refreshToken");
-          dispatch(setUser([]));
-          throw new Error("Session expired. Please log in again.");
-        }
-        throw new Error(response.message || "Failed to change password");
+    if (response.status === "success") {
+      return { success: true };
+    } else {
+      // Handle session expiration
+      if (
+        response.statusCode === 401 ||
+        response.message?.includes("Session expired")
+      ) {
+        // Clear tokens and redirect to login
+        sessionStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        dispatch(setUser([]));
+        throw new Error("Session expired. Please log in again.");
       }
-    } catch (error) {
-      throw error;
+      throw new Error(response.message || "Failed to change password");
     }
   };
 };
@@ -176,11 +154,11 @@ export const updateProfileAction = (profileData) => {
           error: response.message || "Failed to update profile",
         };
       }
-    } catch (error) {
+    } catch {
       // Don't block application submission on profile update failure
       return {
         success: false,
-        error: error.message || "Failed to update profile",
+        error: "Failed to update profile",
       };
     }
   };
@@ -192,7 +170,7 @@ export const logoutAction = (authId) => {
       
 
       // Call the logout API to clear server-side tokens/sessions
-      const logoutResponse = await logoutUser(authId);
+      await logoutUser(authId);
      
 
       // Clear tokens from browser storage regardless of API response
@@ -205,7 +183,7 @@ export const logoutAction = (authId) => {
   
 
       return { success: true };
-    } catch (error) {
+    } catch {
       // Even if API call fails, clear local tokens and reset state
       sessionStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
@@ -218,40 +196,32 @@ export const logoutAction = (authId) => {
 
 export const autologinAction = () => {
   return async (dispatch) => {
-    const accessToken = sessionStorage.getItem("accessToken");
     const refreshToken = localStorage.getItem("refreshToken");
     if (!refreshToken) {
       return;
     }
+    
     dispatch(setLoading(true));
     
     try {
-      if (accessToken) {
-        // dispatch(fetchProfileAction());
-        const response = await getUserProfile();
-        if (
-          response?.status === "error" &&
-          response?.message === "jwt expired"
-        ) {
-          const tokens = await fetchNewAccessTokenApi();
-          
-          if (tokens.status === "success" && tokens?.payload) {
-            sessionStorage.setItem("accessToken", tokens?.payload);
-
-            const getUser = await getUserProfile();
-            if (getUser?.status === "success") {
-              dispatch(setUser(getUser?.payload));
-              return { success: true };
-            }
-          }
-        }
-        if (response?.status === "success" && response?.payload) {
-          dispatch(setUser(response?.payload));
-          return { success: true };
-        }
+      // Attempt to fetch profile. apiProcessor will handle token refresh 
+      // if accessToken is missing or expired, as long as refreshToken is in localStorage.
+      const response = await getUserProfile();
+      
+      if (response?.status === "success" && response?.payload) {
+        dispatch(setUser(response.payload));
+        return { success: true };
+      } else {
+        // If autologin failed (e.g., refresh token expired), clear tokens to prevent loops
+        sessionStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
       }
     } catch (error) {
-      throw error;
+      console.error("Auto-login failed:", error);
+      sessionStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+    } finally {
+      dispatch(setLoading(false));
     }
   };
 };

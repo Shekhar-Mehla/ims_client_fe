@@ -5,7 +5,6 @@ import {
   useParams,
   useLocation,
   useNavigate,
-  useSearchParams,
   Navigate,
 } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
@@ -209,9 +208,8 @@ const ApplicationFormPage = () => {
   } = UseForm(emptyInitialState);
 
   // Get user profile from Redux
-  const user = useSelector((state) => state.userInfo?.users);
-  const profileId = useSelector((state) => state.userInfo?.users?._id);
-  const authId = useSelector((state) => state.userInfo?.users?.authId);
+  const user = useSelector((state) => state.userInfo?.user);
+  const profileId = useSelector((state) => state.userInfo?.user?._id);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
@@ -409,7 +407,8 @@ const ApplicationFormPage = () => {
         };
 
         await dispatch(updateProfileAction(profileUpdatePayload));
-      } catch (profileUpdateError) {
+      } catch {
+        // Silently ignore profile update errors to not block application success
       }
 
       // if (response.status === "error" && response.message === "jwt expired") {
@@ -420,7 +419,7 @@ const ApplicationFormPage = () => {
       setSubmitSuccess(true);
       setSubmitMessage("Application submitted successfully!");
       setShowThankYouModal(true);
-    } catch (error) {
+    } catch {
       // Network or other unexpected errors
       setErrorDetails({
         title: "Connection Error",
@@ -448,7 +447,7 @@ const ApplicationFormPage = () => {
         setForm(savedData);
         hasPrefilledRef.current = true;
         return; // Don't overwrite saved data
-      } catch (error) {
+      } catch {
         // Continue to prefill from user/internship if parsing fails
       }
     }

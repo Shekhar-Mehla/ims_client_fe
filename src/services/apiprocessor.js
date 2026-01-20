@@ -37,7 +37,7 @@ const refreshAccessToken = async () => {
       return response.data.payload;
     }
     return null;
-  } catch (error) {
+  } catch {
     return null;
   }
 };
@@ -49,9 +49,10 @@ export const apiProcessor = async ({
   isPrivate,
   isAcessJWT = true,
   useRefresh = false,
+  showToast = true,
 }) => {
+  const headers = {};
   try {
-    const headers = {};
     if (isPrivate) {
       const token =
         isAcessJWT && !useRefresh ? getAccessToken() : getRefreshToken();
@@ -65,9 +66,11 @@ export const apiProcessor = async ({
       headers,
     });
 
-    toast.promise(responsePending, {
-      pending: "Processing your request...",
-    });
+    if (showToast) {
+      toast.promise(responsePending, {
+        pending: "Processing your request...",
+      });
+    }
     const { data } = await responsePending;
 
     return data;

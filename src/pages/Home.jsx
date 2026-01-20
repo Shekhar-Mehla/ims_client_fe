@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import {
   Briefcase,
@@ -30,7 +30,7 @@ const Home = () => {
   // Get internships from Redux state
   const { internships } = useSelector((state) => state.internshipInfo);
   const isAuthenticated = useSelector((state) => state.userInfo?.user?._id);
-  const user = useSelector((state) => state.userInfo?.users);
+  const user = useSelector((state) => state.userInfo?.user);
 
   // Fetch internships once on mount
   useEffect(() => {

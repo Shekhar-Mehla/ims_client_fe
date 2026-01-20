@@ -11,6 +11,7 @@ import Intership from "./pages/internship/Intership";
 import ApplicationFormPage from "./pages/ApplicationFormPage";
 import ProfilePage from "./pages/ProfilePage";
 import MyApplications from "./pages/MyApplications";
+import ApplicationDetails from "./pages/ApplicationDetails";
 import NotificationsPage from "./pages/NotificationsPage";
 import SearchResults from "./pages/SearchResults";
 
@@ -56,6 +57,15 @@ const AppRoutes = () => {
           element={
             <ProtectedRoute>
               <MyApplications />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="application/:id"
+          element={
+            <ProtectedRoute>
+              <ApplicationDetails />
             </ProtectedRoute>
           }
         />

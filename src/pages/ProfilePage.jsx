@@ -38,6 +38,7 @@ const ProfilePage = () => {
     lastName: "",
     email: "",
     mobile: "",
+    countryCode: "+91",
     address: "",
     city: "",
     state: "",
@@ -82,11 +83,39 @@ const ProfilePage = () => {
   // Populate form data when user data is available
   useEffect(() => {
     if (user && Object.keys(user).length > 0) {
+      let mobile = "";
+      let countryCode = user.countryCode || "+91";
+
+      if (user.mobile) {
+        if (typeof user.mobile === "string") {
+          if (user.mobile.startsWith("+")) {
+            const parts = user.mobile.split(" ");
+            if (parts.length > 1) {
+              countryCode = parts[0] || "+91";
+              mobile = parts.slice(1).join("").trim();
+            } else {
+              const match = user.mobile.match(/^(\+\d{1,3})(.+)$/);
+              if (match) {
+                countryCode = match[1];
+                mobile = match[2].trim();
+              } else {
+                mobile = user.mobile;
+              }
+            }
+          } else {
+            mobile = user.mobile;
+          }
+        } else {
+          mobile = user.mobile.toString();
+        }
+      }
+
       const newFormData = {
         firstName: user.firstName || user.fName || "",
         lastName: user.lastName || user.lName || "",
         email: user.email || "",
-        mobile: user.mobile || user.countryCode + user.mobile || "",
+        mobile: mobile,
+        countryCode: countryCode,
         address: user.address || "",
         city: user.city || "",
         state: user.state || "",
@@ -192,25 +221,7 @@ const ProfilePage = () => {
     try {
       // Extract mobile number and country code
       let mobile = formData.mobile || "";
-      let countryCode = "+91"; // Default country code
-
-      // If mobile includes country code, extract it
-      if (mobile && typeof mobile === "string") {
-        if (mobile.startsWith("+")) {
-          const parts = mobile.split(" ");
-          if (parts.length > 1) {
-            countryCode = parts[0] || "+91";
-            mobile = parts.slice(1).join("").trim();
-          } else {
-            // Try to extract country code from the beginning
-            const match = mobile.match(/^(\+\d{1,3})(.+)$/);
-            if (match) {
-              countryCode = match[1];
-              mobile = match[2].trim();
-            }
-          }
-        }
-      }
+      let countryCode = formData.countryCode || "+91";
 
       // Map formData to backend format (firstName -> fName, lastName -> lName)
       const profileUpdatePayload = {
@@ -382,13 +393,31 @@ const ProfilePage = () => {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="mobile">Mobile Number</Label>
-                  <Input
-                    id="mobile"
-                    name="mobile"
-                    value={formData.mobile}
-                    onChange={handleInputChange}
-                    placeholder="Enter your mobile number"
-                  />
+                  <div className="flex gap-2">
+                    <select
+                      name="countryCode"
+                      value={formData.countryCode}
+                      onChange={handleInputChange}
+                      className="w-24 h-10 px-3 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                    >
+                      <option value="+91">IN (+91)</option>
+                      <option value="+61">AU (+61)</option>
+                      <option value="+1">US (+1)</option>
+                      <option value="+1">CA (+1)</option>
+                      <option value="+44">UK (+44)</option>
+                      <option value="+64">NZ (+64)</option>
+                      <option value="+65">SG (+65)</option>
+                      <option value="+971">UAE (+971)</option>
+                    </select>
+                    <Input
+                      id="mobile"
+                      name="mobile"
+                      value={formData.mobile}
+                      onChange={handleInputChange}
+                      placeholder="Enter mobile number"
+                      className="flex-1"
+                    />
+                  </div>
                 </div>
               </div>
             </CardContent>

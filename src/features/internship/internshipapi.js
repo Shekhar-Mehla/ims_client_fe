@@ -5,11 +5,11 @@ export const internshipApi = apiBaseUrl + "/api/v1/internship";
 export const getAllInternships = async () => {
   const url = `${internshipApi}/all-internships`;
   const method = "GET";
-  return await apiProcessor({ url, method });
+  return await apiProcessor({ url, method, showToast: false });
 };
 
 export const getInternshipBySlug = async (slug) => {
   const url = `${internshipApi}/${slug}`;
   const method = "GET";
-  return await apiProcessor({ url, method });
+  return await apiProcessor({ url, method, showToast: false });
 };

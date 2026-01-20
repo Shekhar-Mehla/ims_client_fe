@@ -9,34 +9,71 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Mail, KeyRound, Lock } from "lucide-react";
+import { Mail, KeyRound, Lock, ArrowLeft } from "lucide-react";
+import { generateNewOtpApi, forgetPasswordApi } from "../../features/user/userapi";
+import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 
 const ForgotPassword = () => {
   const [step, setStep] = useState("email");
   const [mail, setmail] = useState(null);
+  const [isPending] = useTransition();
+  const navigate = useNavigate();
+
   const handleOnSubmit = async (prevState, formdata) => {
     const email = formdata.get("email");
     const otp = formdata.get("otp");
     const password = formdata.get("password");
-    if (email) {
-      // make api call
-      return startTransition(() => {
-        setStep("otp");
-        setmail(email);
-      });
+
+    if (step === "email" && email) {
+      try {
+        const response = await generateNewOtpApi(email);
+        if (response.status === "success") {
+          setmail(email);
+          setStep("otp");
+          toast.success("OTP sent to your email");
+          return { success: true };
+        } else {
+          toast.error(response.message || "Failed to send OTP");
+          return { error: response.message };
+        }
+      } catch {
+        toast.error("An error occurred. Please try again.");
+        return { error: "Failed to send OTP" };
+      }
     }
-    if (otp) {
-      // make api call here
-      return startTransition(() => {
-        setStep("reset");
-      });
+
+    if (step === "otp" && otp) {
+      // Just move to reset step for UI flow, or you could verify OTP here if backend had a separate verify endpoint.
+      // Since forget-password endpoint takes OTP, we'll collect it here and use it in the next step.
+      setStep("reset");
+      return { success: true, otp };
     }
-    if (password) {
+
+    if (step === "reset" && password) {
+      try {
+        const response = await forgetPasswordApi({
+          email: mail,
+          otp: prevState.otp, // collected from previous step
+          newPassword: password,
+        });
+
+        if (response.status === "success") {
+          toast.success("Password reset successfully!");
+          navigate("/login");
+          return { success: true };
+        } else {
+          toast.error(response.message || "Failed to reset password");
+          return { error: response.message };
+        }
+      } catch {
+        toast.error("An error occurred. Please try again.");
+        return { error: "Failed to reset password" };
+      }
     }
   };
 
-  const [isPending, startTransition] = useTransition();
-  const [state, formAction] = useActionState(handleOnSubmit, {});
+  const [, formAction] = useActionState(handleOnSubmit, {});
 
   return (
     <div
@@ -46,12 +83,9 @@ const ForgotPassword = () => {
           "url('https://images.unsplash.com/photo-1593642634367-d91a135587b5?auto=format&fit=crop&w=1920&q=80')",
       }}
     >
-      {/* Gentle gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-br from-slate-900/40 via-slate-900/20 to-transparent" />
 
-      {/* Centered form container */}
       <div className="relative z-10 flex flex-col md:flex-row items-center w-full max-w-5xl mx-auto backdrop-blur-sm rounded-2xl overflow-hidden border border-white/10 bg-white/80 md:bg-white/70 dark:bg-neutral-900/70 dark:border-neutral-800 transition-all">
-        {/* Left info section */}
         <div className="hidden md:flex flex-1 flex-col justify-center items-start px-10 py-14 bg-gradient-to-br from-blue-600/90 via-blue-700/80 to-indigo-800/90 text-white">
           <h1 className="text-4xl font-semibold leading-tight mb-4">
             Internship Management Portal
@@ -62,7 +96,6 @@ const ForgotPassword = () => {
           </p>
         </div>
 
-        {/* Right form section */}
         <div className="flex-1 w-full px-8 py-10 md:py-14">
           <Card className="border-0 shadow-none bg-transparent">
             <CardHeader className="pb-2 text-center">
@@ -92,6 +125,7 @@ const ForgotPassword = () => {
                         placeholder="you@example.com"
                         className="pl-9"
                         name="email"
+                        required
                       />
                     </div>
                     <Button
@@ -116,12 +150,14 @@ const ForgotPassword = () => {
                         maxLength={6}
                         className="pl-9 text-center tracking-[0.4em]"
                         name="otp"
+                        required
                       />
                     </div>
                     <div className="flex gap-3">
                       <Button
                         variant="outline"
                         className="w-1/2"
+                        type="button"
                         onClick={() => setStep("email")}
                         disabled={isPending}
                       >
@@ -149,13 +185,15 @@ const ForgotPassword = () => {
                         placeholder="Enter new password"
                         className="pl-9"
                         name="password"
+                        required
+                        minLength={8}
                       />
                     </div>
                     <div className="flex gap-3">
                       <Button
                         variant="outline"
                         className="w-1/2"
-                        type="submit"
+                        type="button"
                         disabled={isPending}
                         onClick={() => {
                           setStep("otp");

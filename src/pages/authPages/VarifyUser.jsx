@@ -53,7 +53,7 @@ const VarifyUser = () => {
           setVerificationStatus("error");
           toast.error(response?.message || "Email verification failed");
         }
-      } catch (error) {
+      } catch {
         setVerificationStatus("error");
         toast.error("An error occurred during verification");
       } finally {

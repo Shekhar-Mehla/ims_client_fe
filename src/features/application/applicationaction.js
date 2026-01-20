@@ -1,10 +1,18 @@
 import { getApplicationsByUser } from "./applicationapi.js";
-import { setApplications } from "./applicationslice.js";
+import { setApplications, setLoading } from "./applicationslice.js";
 
 export const getApplicationsByUserAction = (userId) => async (dispatch) => {
-  const applicationInfo = await getApplicationsByUser(userId);
-  const { status, payload } = applicationInfo;
-  
-  // You can dispatch an action to store applications in Redux if needed
-  status === "success" && dispatch(setApplications(payload));
+  dispatch(setLoading(true));
+  try {
+    const applicationInfo = await getApplicationsByUser(userId);
+    const { status, payload } = applicationInfo;
+    
+    if (status === "success") {
+      dispatch(setApplications(payload));
+    } else {
+      dispatch(setApplications([]));
+    }
+  } catch {
+    dispatch(setApplications([]));
+  }
 };

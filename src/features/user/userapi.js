@@ -29,7 +29,7 @@ export const verifyEmail = async (token) => {
 export const getUserProfile = async () => {
   const url = `${userApi}/profile`;
   const method = "GET";
-  return await apiProcessor({ url, method, isPrivate: true });
+  return await apiProcessor({ url, method, isPrivate: true, showToast: false });
 };
 
 export const updateUserProfile = async (profileData) => {
@@ -58,12 +58,32 @@ export const changePassword = async (passwordData) => {
 export const fetchNewAccessTokenApi = async () => {
   const url = `${userApi}/renew-access-token`;
   const method = "POST";
-  return await apiProcessor({ url, method, isPrivate: true, useRefresh: true });
+  return await apiProcessor({
+    url,
+    method,
+    isPrivate: true,
+    useRefresh: true,
+    showToast: false,
+  });
 };
 
 export const googleLoginUser = async (userData) => {
   const url = `${userApi}/google-login`;
   const method = "POST";
   const payload = userData;
+  return await apiProcessor({ url, method, payload });
+};
+
+export const generateNewOtpApi = async (email) => {
+  const url = `${userApi}/generate-new-otp`;
+  const method = "POST";
+  const payload = { email };
+  return await apiProcessor({ url, method, payload });
+};
+
+export const forgetPasswordApi = async (data) => {
+  const url = `${userApi}/forget-password`;
+  const method = "POST";
+  const payload = data; // { email, newPassword, otp }
   return await apiProcessor({ url, method, payload });
 };

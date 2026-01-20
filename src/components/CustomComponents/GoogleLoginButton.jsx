@@ -3,16 +3,15 @@ import { signInWithPopup } from "firebase/auth";
 import {
   auth,
   googleProvider,
-  facebookProvider,
-  githubProvider,
 } from "../../firebase/firebase-config.js";
 import { FcGoogle } from "react-icons/fc";
 
 const GoogleLoginButton = () => {
   const handleGoogleLogin = async () => {
     try {
-      const result = await signInWithPopup(auth, googleProvider);
+      await signInWithPopup(auth, googleProvider);
     } catch (error) {
+      console.error("Google login error:", error);
     }
   };
 

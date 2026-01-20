@@ -7,7 +7,7 @@ export const getMyNotifications = async (id) => {
   const url = `${notificationApi}/${id}`;
   const method = "GET";
   // endpoint may require auth; apiProcessor will attach tokens when isPrivate is true
-  return await apiProcessor({ url, method, isPrivate: true });
+  return await apiProcessor({ url, method, isPrivate: true, showToast: false });
 };
 
 export const markNotificationRead = async (id) => {

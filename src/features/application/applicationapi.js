@@ -13,7 +13,13 @@ export const getApplicationsByUser = async (userId) => {
   const url = `${applicationApi}/user/${userId}`;
   const method = "GET";
   const isPrivate = true;
-  return await apiProcessor({ url, method, isPrivate });
+  return await apiProcessor({ url, method, isPrivate, showToast: false });
+};
+export const getApplicationDetails = async (applicationId) => {
+  const url = `${applicationApi}/details/${applicationId}`;
+  const method = "GET";
+  const isPrivate = true;
+  return await apiProcessor({ url, method, isPrivate, showToast: false });
 };
 // export const getAllApplications = async () => {
 //   const url = `${applicationApi}/get-all-applications`;

@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams, useNavigate } from "react-router-dom";
 
@@ -28,9 +28,11 @@ const Intership = () => {
   const { slug } = useParams();
 
   const navigate = useNavigate();
-  const { internship, loading, error } = useSelector(
+  const { internship, loading } = useSelector(
     (state) => state.internshipInfo
   );
+  
+  const [activeTab, setActiveTab] = useState("overview");
   
   const dispatch = useDispatch();
   useEffect(() => {
@@ -108,39 +110,122 @@ const Intership = () => {
                 </div>
             </div>
 
-            {/* Navigation Tabs (Pseudo) */}
+            {/* Navigation Tabs */}
             <div className="flex gap-2 border-b border-gray-200 dark:border-neutral-700 overflow-x-auto pb-1 scrollbar-hide">
-                <button className="px-4 py-2 text-sm font-medium text-blue-600 border-b-2 border-blue-600 whitespace-nowrap">
+                <button 
+                  onClick={() => setActiveTab("overview")}
+                  className={`px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors border-b-2 ${
+                    activeTab === "overview" 
+                    ? "text-blue-600 border-blue-600" 
+                    : "text-gray-500 hover:text-gray-700 border-transparent hover:border-gray-300"
+                  }`}
+                >
                     Overview
                 </button>
-                <button className="px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 border-b-2 border-transparent hover:border-gray-300 whitespace-nowrap">
+                <button 
+                  onClick={() => setActiveTab("company")}
+                  className={`px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors border-b-2 ${
+                    activeTab === "company" 
+                    ? "text-blue-600 border-blue-600" 
+                    : "text-gray-500 hover:text-gray-700 border-transparent hover:border-gray-300"
+                  }`}
+                >
                     Company
                 </button>
-                <button className="px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 border-b-2 border-transparent hover:border-gray-300 whitespace-nowrap">
+                <button 
+                  onClick={() => setActiveTab("reviews")}
+                  className={`px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors border-b-2 ${
+                    activeTab === "reviews" 
+                    ? "text-blue-600 border-blue-600" 
+                    : "text-gray-500 hover:text-gray-700 border-transparent hover:border-gray-300"
+                  }`}
+                >
                     Reviews
                 </button>
             </div>
 
             {/* Content Sections */}
-            <div className="bg-white dark:bg-neutral-800 rounded-2xl shadow-sm border border-gray-100 dark:border-neutral-700 p-8 space-y-8">
-                <section>
-                    <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">About the role</h2>
-                    <div className="prose prose-blue dark:prose-invert max-w-none text-gray-600 dark:text-gray-300 leading-relaxed">
-                        <p>{internship.description}</p>
-                    </div>
-                </section>
+            <div className="bg-white dark:bg-neutral-800 rounded-2xl shadow-sm border border-gray-100 dark:border-neutral-700 p-8 min-h-[300px]">
+                {activeTab === "overview" && (
+                    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                        <section>
+                            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">About the role</h2>
+                            <div className="prose prose-blue dark:prose-invert max-w-none text-gray-600 dark:text-gray-300 leading-relaxed">
+                                <p>{internship.description}</p>
+                            </div>
+                        </section>
 
-                {internship.technologies?.length > 0 && (
-                    <section>
-                         <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-3">Technologies</h2>
-                         <div className="flex flex-wrap gap-2">
-                            {internship.technologies.map((tech, i) => (
-                                <Badge key={i} variant="secondary" className="px-3 py-1 bg-gray-100 dark:bg-neutral-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200">
-                                    {tech}
-                                </Badge>
-                            ))}
-                         </div>
-                    </section>
+                        {internship.technologies?.length > 0 && (
+                            <section>
+                                 <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-3">Technologies</h2>
+                                 <div className="flex flex-wrap gap-2">
+                                    {internship.technologies.map((tech, i) => (
+                                        <Badge key={i} variant="secondary" className="px-3 py-1 bg-gray-100 dark:bg-neutral-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200">
+                                            {tech}
+                                        </Badge>
+                                    ))}
+                                 </div>
+                            </section>
+                        )}
+                    </div>
+                )}
+
+                {activeTab === "company" && (
+                    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                        <section>
+                            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">About {internship.company}</h2>
+                            <div className="flex items-center gap-3 text-gray-600 dark:text-gray-400 mb-4">
+                                <MapPin className="w-5 h-5 text-blue-600" />
+                                <span>{internship.location}</span>
+                            </div>
+                            <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
+                                {internship.company} is a leading provider of innovative solutions in the IT sector. 
+                                We are committed to fostering talent and providing exceptional internship opportunities 
+                                for aspiring professionals.
+                            </p>
+                        </section>
+                        <section className="bg-gray-50 dark:bg-neutral-900/50 p-4 rounded-xl border border-gray-100 dark:border-neutral-700">
+                            <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">Company Insights</h3>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <p className="text-xs text-gray-500">Employee Range</p>
+                                    <p className="text-sm font-medium">50-200 employees</p>
+                                </div>
+                                <div>
+                                    <p className="text-xs text-gray-500">Industry</p>
+                                    <p className="text-sm font-medium">Technology / Software</p>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                )}
+
+                {activeTab === "reviews" && (
+                    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                        <div className="flex items-center justify-between mb-2">
+                             <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Student Reviews</h2>
+                             <div className="flex items-center gap-1.5 bg-amber-50 dark:bg-amber-900/20 px-3 py-1 rounded-full border border-amber-100 dark:border-amber-900/30">
+                                <Star className="w-4 h-4 text-amber-500 fill-current" />
+                                <span className="text-sm font-bold text-amber-700 dark:text-amber-400">{internship.rating || "4.8"}</span>
+                                <span className="text-xs text-amber-600/60 dark:text-amber-400/60">({internship.reviewCount || 0})</span>
+                             </div>
+                        </div>
+
+                        {internship.reviewCount > 0 ? (
+                           <div className="space-y-4">
+                               {/* This would ideally map through actual reviews if they existed in the model */}
+                               <p className="text-sm text-gray-500 text-center py-8 italic">
+                                   Reviews content display pending integration with review system.
+                               </p>
+                           </div>
+                        ) : (
+                            <div className="text-center py-12 bg-gray-50 dark:bg-neutral-900/30 rounded-2xl border border-dashed border-gray-200 dark:border-neutral-700">
+                                <MessageCircle className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                                <p className="text-gray-500 dark:text-gray-400">No reviews yet for this internship.</p>
+                                <p className="text-xs text-gray-400 mt-1">Be the first to share your experience after applying!</p>
+                            </div>
+                        )}
+                    </div>
                 )}
             </div>
           </div>

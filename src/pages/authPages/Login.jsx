@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 import Submit from "../../components/CustomComponents/Submit";
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect } from "react";
 import { Mail, Lock } from "lucide-react";
 import { Link, useNavigate, useSearchParams, useLocation } from "react-router";
 
@@ -37,7 +37,7 @@ const Login = () => {
  
   useEffect(() => {
     user?._id && navigate(returnUrl);
-  }, [user?._id, dispatch]);
+  }, [user?._id, dispatch, navigate, returnUrl]);
 
   const handleOnSubmit = async (prevState, formData) => {
     const email = formData.get("email");
@@ -79,6 +79,8 @@ const Login = () => {
           : undefined,
       });
     } catch (error) {
+      console.error("Google login failed:", error);
+      // You might want to show a toast error here
     }
   };
 
